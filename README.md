@@ -1,103 +1,20 @@
 # PlaceMate – Campus Placement Management System
 
-**PlaceMate** is a role‑based campus placement web application that streamlines the placement process for students, recruiters, and college administrators (TPOs). It provides separate dashboards for each role and uses AI‑assisted resume analysis.
+PlaceMate is a role-based campus placement management web application designed to centralize placement activities for students, recruiters, and college administrators.  
+The project is developed collaboratively using a modern MERN-based approach.
 
 ---
 
-## 🚀 Tech Stack
+## 📌 Tech Stack
 
-- **Frontend**: React, React Router, Axios, CSS (or Tailwind if preferred)
-- **Backend**: Node.js, Express, JWT, bcrypt
-- **Database**: MongoDB (Atlas free tier)
-
----
-
-## 📁 Project Folder Structure
-
-```
-placemate-campus-placement-system/
-│
-├── client/                 # React Frontend
-│   ├── public/             # Static files
-│   └── src/
-│       ├── assets/        # Images, icons
-│       ├── components/    # Reusable UI components
-│       ├── pages/         # Page‑level components
-│       │   ├── auth/      # Login & Signup pages
-│       │   ├── student/   # Student dashboard pages
-│       │   ├── company/   # Company dashboard pages
-│       │   └── admin/     # Admin (TPO) pages
-│       ├── routes/        # Protected & role‑based routes
-│       ├── services/      # API calls (Axios)
-│       ├── context/       # Auth & user context
-│       ├── utils/         # Helper functions
-│       ├── App.jsx
-│       └── main.jsx
-│   └── package.json
-│
-├── server/                 # Node.js Backend
-│   ├── controllers/        # Business logic
-│   ├── models/             # MongoDB schemas
-│   ├── routes/             # API routes
-│   ├── middleware/         # Auth & role middleware
-│   ├── services/           # Resume analysis / AI logic
-│   ├── uploads/            # Uploaded resume files
-│   ├── config/             # DB & environment config
-│   ├── app.js
-│   └── server.js
-│
-├── .env.example           # Environment variables template
-├── .gitignore
-├── README.md
-└── package.json           # Optional root scripts
-```
-
-**Why `.gitkeep` files are present**
-Each empty directory contains a `.gitkeep` placeholder so Git tracks the folder structure even before any source files are added. This guarantees the required directories exist for the application to run and for collaborators to see the intended layout.
-
----
-
-## ▶️ Running the Project Locally
-
-### Frontend
-```bash
-cd client
-npm install
-npm run dev   # starts the Vite dev server (or npm start if using CRA)
-```
-
-### Backend
-```bash
-cd server
-npm install
-npm run dev   # starts the Node.js server (usually on http://localhost:5000)
-```
-
-Make sure to copy `.env.example` to `.env` and fill in the required values (MongoDB URI, JWT secret, etc.).
-
----
-
-## 🤝 Contributing
-Feel free to open issues or submit pull requests. Follow standard GitHub workflow: fork → branch → PR.
-
----
-
-
-PlaceMate is a role-based campus placement management web application designed to centralize and streamline the placement process for students, recruiters, and college administrators (TPOs).  
-The project is developed collaboratively using a modern MERN-based architecture and follows industry-standard development workflows.
-
----
-
-## 🚀 Tech Stack
-
-### Frontend
+**Frontend**
 - React.js
 - React Router
 - Axios
 - Chart.js
 - CSS / Tailwind CSS
 
-### Backend
+**Backend**
 - Node.js
 - Express.js
 - JWT Authentication
@@ -197,4 +114,12 @@ docs: update README
 
 
 
+**Database**
+- MongoDB (Free Tier – MongoDB Atlas)
+
+---
+
+## 📁 Project Folder Structure
+
+This repository follows a **monorepo structure**, containing both frontend and backend in a single repository for easy collaboration.
 
