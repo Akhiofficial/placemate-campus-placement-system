@@ -137,7 +137,7 @@ exports.changePassword = async (req, res) => {
 
     try {
         // Get user from database (req.user is set by protect middleware)
-        const user = await User.findById(req.user.id);
+        const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
         }
