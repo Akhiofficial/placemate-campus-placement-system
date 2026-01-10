@@ -1,13 +1,16 @@
 // server/routes/auth.js
 const express = require('express');
-const { signup, login } = require('../controllers/authController');
+const { signup, login, requestAdminAccess, changePassword } = require('../controllers/authController');
+const { protect } = require('../middleware/auth');
 
 const router = express.Router();
 
-// @route   POST /api/auth/signup
+// Public routes
 router.post('/signup', signup);
-
-// @route   POST /api/auth/login
 router.post('/login', login);
+router.post('/request-admin', requestAdminAccess);
+
+// Protected route - change password (requires authentication)
+router.put('/change-password', protect, changePassword);
 
 module.exports = router;

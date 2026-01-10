@@ -1,9 +1,8 @@
-// server/models/User.js
-
+// server/models/AdminRequest.js
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
-const UserSchema = new mongoose.Schema({
+const AdminRequestSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -20,36 +19,28 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    role: {
+    status: {
         type: String,
-        enum: ['student', 'company', 'admin'],
-        default: 'student',
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending',
     },
-    isApproved: {
-        type: Boolean,
-        default: function () {
-            // Auto-approve student and company, require approval for admin
-            return this.role !== 'admin';
-        },
-    },
-    approvedBy: {
+    reviewedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     },
-    approvedAt: {
+    reviewedAt: {
         type: Date,
+    },
+    rejectionReason: {
+        type: String,
     },
 }, { timestamps: true });
 
-// Pre-save hook to hash password
-UserSchema.pre('save', async function () {
+// Hash password before saving (same as User model)
+AdminRequestSchema.pre('save', async function () {
     if (!this.isModified('password')) return;
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
 });
 
-UserSchema.methods.comparePassword = async function (candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
-};
-
-module.exports = mongoose.model('User', UserSchema);
+module.exports = mongoose.model('AdminRequest', AdminRequestSchema);
