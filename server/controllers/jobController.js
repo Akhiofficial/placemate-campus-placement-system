@@ -1,4 +1,5 @@
 const Job = require('../models/Job');
+const User = require('../models/User');
 
 // @desc    Get all jobs with search & filters
 // @route   GET /api/jobs
@@ -73,6 +74,127 @@ exports.getJobById = async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(404).json({ msg: 'Job not found' });
         }
+        res.status(500).send('Server error');
+    }
+};
+
+
+
+// @desc    Create a new job
+// @route   POST /api/jobs
+// @access  Private (Company)
+exports.createJob = async (req, res) => {
+    try {
+        const {
+            title,
+            description,
+            department,
+            location,
+            type,
+            workMode,
+            salary,
+            salaryMin,
+            salaryMax,
+            requirements,
+            eligibility,
+            tags,
+            deadline,
+            companyLogo,
+            status
+        } = req.body;
+
+        // Fetch user to get the name
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        const newJob = new Job({
+            company: user.name,
+            companyLogo: companyLogo || '',
+            title,
+            description,
+            department,
+            location,
+            type,
+            workMode,
+            salary,
+            salaryMin,
+            salaryMax,
+            requirements,
+            eligibility,
+            tags,
+            deadline,
+            postedBy: user.id,
+            status: status || 'Open'
+        });
+
+        const job = await newJob.save();
+        res.json(job);
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Update a job
+// @route   PUT /api/jobs/:id
+// @access  Private (Company)
+exports.updateJob = async (req, res) => {
+    try {
+        let job = await Job.findById(req.params.id);
+
+        if (!job) {
+            return res.status(404).json({ msg: 'Job not found' });
+        }
+
+        // Check user
+        if (job.postedBy.toString() !== req.user.userId && req.user.role !== 'admin') {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+
+        job = await Job.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+        res.json(job);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Delete (Close) a job
+// @route   DELETE /api/jobs/:id
+// @access  Private (Company)
+exports.deleteJob = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+
+        if (!job) {
+            return res.status(404).json({ msg: 'Job not found' });
+        }
+
+        // Check user
+        if (job.postedBy.toString() !== req.user.userId && req.user.role !== 'admin') {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+
+        await job.deleteOne();
+        res.json({ msg: 'Job removed' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Get jobs posted by current company
+// @route   GET /api/jobs/my-jobs
+// @access  Private (Company)
+exports.getMyJobs = async (req, res) => {
+    try {
+        const jobs = await Job.find({ postedBy: req.user.userId }).sort({ createdAt: -1 });
+        res.json(jobs);
+    } catch (err) {
+        console.error(err.message);
         res.status(500).send('Server error');
     }
 };

@@ -17,8 +17,13 @@ const ApplicationSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Applied', 'In Review', 'Interview', 'Offer', 'Rejected'],
+        enum: ['Applied', 'Pending', 'In Review', 'Shortlisted', 'Interview', 'Offer', 'Rejected'],
         default: 'Applied'
+    },
+    aiScore: {
+        type: Number,
+        min: 0,
+        max: 100
     },
     notes: {
         type: String,
