@@ -10,7 +10,9 @@ const {
     updateApplicationStatus,
     getInterviewStats,
     getCompanyInterviews,
-    scheduleInterview
+    scheduleInterview,
+    getCompanyProfile,
+    updateCompanyProfile
 } = require('../controllers/companyController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -77,6 +79,16 @@ router.get('/interviews', getCompanyInterviews);
 // @desc    Schedule interview & notify student
 // @access  Private (Company)
 router.post('/schedule-interview', scheduleInterview);
+
+// @route   GET /api/company/profile
+// @desc    Get company profile
+// @access  Private (Company)
+router.get('/profile', getCompanyProfile);
+
+// @route   PUT /api/company/profile
+// @desc    Update/Create company profile
+// @access  Private (Company)
+router.put('/profile', updateCompanyProfile);
 
 
 

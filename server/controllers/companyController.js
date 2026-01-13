@@ -2,6 +2,7 @@ const Job = require('../models/Job');
 const Application = require('../models/Application');
 const Interview = require('../models/Interview');
 const Notification = require('../models/Notification');
+const CompanyProfile = require('../models/CompanyProfile');
 const crypto = require('crypto');
 
 // @desc    Get Company Dashboard Stats
@@ -706,6 +707,88 @@ exports.scheduleInterview = async (req, res) => {
         await notification.save();
 
         res.json({ msg: 'Interview scheduled successfully', interview });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Get Company Profile
+// @route   GET /api/company/profile
+// @access  Private (Company)
+exports.getCompanyProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        let profile = await CompanyProfile.findOne({ user: userId });
+
+        if (!profile) {
+            // Return empty profile with user ID initialized if feasible, or just null
+            // For frontend ease, let's return a default object structure relative to the model
+            return res.json({
+                companyName: '',
+                logo: '',
+                description: '',
+                socialLinks: {},
+                values: []
+            });
+        }
+
+        res.json(profile);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Update/Create Company Profile
+// @route   PUT /api/company/profile
+// @access  Private (Company)
+exports.updateCompanyProfile = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const {
+            companyName,
+            logo,
+            coverImage,
+            description,
+            website,
+            location,
+            headquarters,
+            industry,
+            companySize,
+            foundedYear,
+            socialLinks,
+            values
+        } = req.body;
+
+        // Build profile object
+        const profileFields = {
+            user: userId
+        };
+
+        if (companyName) profileFields.companyName = companyName;
+        if (logo) profileFields.logo = logo;
+        if (coverImage) profileFields.coverImage = coverImage;
+        if (description) profileFields.description = description;
+        if (website) profileFields.website = website;
+        if (location) profileFields.location = location;
+        if (headquarters) profileFields.headquarters = headquarters;
+        if (industry) profileFields.industry = industry;
+        if (companySize) profileFields.companySize = companySize;
+        if (foundedYear) profileFields.foundedYear = foundedYear;
+        if (socialLinks) profileFields.socialLinks = socialLinks;
+        if (values) profileFields.values = values;
+
+        // Using findOneAndUpdate with upsert to handle both Create and Update
+        const profile = await CompanyProfile.findOneAndUpdate(
+            { user: userId },
+            { $set: profileFields },
+            { new: true, upsert: true, setDefaultsOnInsert: true }
+        );
+
+        res.json(profile);
 
     } catch (err) {
         console.error(err.message);
