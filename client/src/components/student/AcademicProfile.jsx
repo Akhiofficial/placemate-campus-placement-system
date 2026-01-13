@@ -7,7 +7,7 @@ const AcademicProfile = () => {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className={`rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800
+      className={`rounded-2xl bg-linear-to-br from-slate-900 to-slate-800
                   border border-white/10 shadow-lg p-6`}
     >
       <h2 className="text-lg font-semibold text-white mb-5">
