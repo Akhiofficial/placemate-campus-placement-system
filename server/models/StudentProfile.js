@@ -35,6 +35,11 @@ const StudentProfileSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    placementStatus: {
+        type: String,
+        enum: ['Placed', 'Seeking', 'Interning', 'Not Eligible'],
+        default: 'Seeking'
+    },
 
     // Academic Information
     universityRollNo: {

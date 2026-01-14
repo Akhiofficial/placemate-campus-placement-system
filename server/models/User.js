@@ -28,9 +28,13 @@ const UserSchema = new mongoose.Schema({
     isApproved: {
         type: Boolean,
         default: function () {
-            // Auto-approve student and company, require approval for admin
-            return this.role !== 'admin';
+            // Auto-approve student, require approval for admin and company
+            return this.role === 'student';
         },
+    },
+    isBlocked: {
+        type: Boolean,
+        default: false
     },
     approvedBy: {
         type: mongoose.Schema.Types.ObjectId,

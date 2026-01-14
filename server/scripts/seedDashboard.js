@@ -19,6 +19,7 @@ const seedData = async () => {
         await Application.deleteMany({});
         await Interview.deleteMany({});
         await Notification.deleteMany({});
+        await require('../models/StudentProfile').deleteMany({});
 
         // 1. Get or Create Student
         let student = await User.findOne({ email: 'alex@student.com' });
@@ -47,6 +48,7 @@ const seedData = async () => {
                 workMode: 'On-site',
                 location: 'Bangalore',
                 salary: '12 - 15 LPA',
+                salaryMax: 15,
                 requirements: ['B.Tech'],
                 tags: ['New']
             },
@@ -59,7 +61,8 @@ const seedData = async () => {
                 type: 'Full-time',
                 workMode: 'Remote',
                 location: 'Remote',
-                salary: '8 - 12 LPA'
+                salary: '8 - 12 LPA',
+                salaryMax: 12
             },
             {
                 company: 'DataFlow Analytics',
@@ -70,7 +73,20 @@ const seedData = async () => {
                 type: 'Full-time',
                 workMode: 'Hybrid',
                 location: 'Hyderabad',
-                salary: '15 - 20 LPA'
+                salary: '15 - 20 LPA',
+                salaryMax: 20
+            },
+            {
+                company: 'AutoMech Ind.',
+                companyLogo: 'https://via.placeholder.com/150/secondary/ffffff?text=AutoMech',
+                title: 'Mechanical Engineer',
+                description: 'Core mechanical engineering role.',
+                status: 'Closed',
+                type: 'Full-time',
+                workMode: 'On-site',
+                location: 'Pune',
+                salary: '6 - 8 LPA',
+                salaryMax: 8
             }
         ];
         const createdJobs = await Job.insertMany(jobsData);
@@ -80,6 +96,29 @@ const seedData = async () => {
         const techJob = createdJobs.find(j => j.company === 'Tech Corp Inc.');
         const creativeJob = createdJobs.find(j => j.company === 'Creative Studio Agency');
         const dataJob = createdJobs.find(j => j.company === 'DataFlow Analytics');
+        const autoJob = createdJobs.find(j => j.company === 'AutoMech Ind.');
+
+        // Helpers to create students
+        const createStudent = async (name, email, dept) => {
+            let s = await User.findOne({ email });
+            if (!s) {
+                s = await User.create({
+                    name, email, password: 'Student@123', role: 'student', isApproved: true
+                });
+            }
+            // Create Profile
+            await require('../models/StudentProfile').create({
+                user: s._id,
+                department: dept,
+                course: 'B.Tech',
+                cgpa: 8.5
+            });
+            return s;
+        };
+
+        const studentBob = await createStudent('Bob Builder', 'bob@student.com', 'CS');
+        const studentCharlie = await createStudent('Charlie Mech', 'charlie@student.com', 'MECH');
+        const studentDana = await createStudent('Dana Data', 'dana@student.com', 'CS');
 
         // 3. Create Applications
         console.log('📝 Seeding Applications...');
@@ -101,6 +140,25 @@ const seedData = async () => {
                 job: dataJob._id,
                 status: 'Interview',
                 applicationId: 'APP-1003'
+            },
+            // Placed Students
+            {
+                student: studentBob._id,
+                job: techJob._id,
+                status: 'Offer',
+                applicationId: 'APP-2001'
+            },
+            {
+                student: studentCharlie._id,
+                job: autoJob._id,
+                status: 'Offer',
+                applicationId: 'APP-2002'
+            },
+            {
+                student: studentDana._id,
+                job: dataJob._id,
+                status: 'Offer', // 20 LPA
+                applicationId: 'APP-2003'
             }
         ];
         const createdApps = await Application.insertMany(appsData);
