@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
   User,
@@ -12,7 +11,9 @@ import {
   LogOut,
   Moon,
   Sun,
+  X
 } from "lucide-react";
+import { useTheme } from "../../context/ThemeContext";
 
 const menuItems = [
   { name: "Dashboard", path: "/student/dashboard", icon: LayoutDashboard },
@@ -23,87 +24,116 @@ const menuItems = [
   { name: "Settings", path: "/student/settings", icon: Settings },
 ];
 
-const StudentSidebar = () => {
-  const [dark, setDark] = useState(false);
+const SidebarContent = ({ theme, toggleTheme, onClose }) => (
+  <div className="flex flex-col h-full justify-between">
+    {/* Top Section */}
+    <div>
+      {/* Logo */}
+      <div className="px-6 py-6 flex items-center justify-between">
+        <span className="text-xl font-bold text-blue-600 tracking-tight">PlaceMate</span>
+        {onClose && (
+          <button onClick={onClose} className="md:hidden text-foreground-muted hover:text-foreground">
+            <X size={24} />
+          </button>
+        )}
+      </div>
 
-  // Apply dark mode to entire app
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
+      {/* Profile Card */}
+      <div className="mx-4 mb-6 p-4 bg-background-muted rounded-xl flex items-center gap-4 transition-colors">
+        <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold text-lg">
+          A
+        </div>
+        <div className="leading-tight">
+          <p className="font-semibold text-sm text-foreground">
+            Alex Johnson
+          </p>
+          <p className="text-xs text-foreground-muted">
+            Comp. Sci · 2024
+          </p>
+        </div>
+      </div>
+
+      {/* Menu */}
+      <nav className="space-y-1 px-3">
+        {menuItems.map(({ name, path, icon: Icon }, index) => (
+          <NavLink
+            key={name}
+            to={path}
+            onClick={onClose} // Close sidebar on mobile when link clicked
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition ${isActive
+                ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 shadow-sm"
+                : "text-foreground-muted hover:bg-background-muted"
+              }`
+            }
+          >
+            <Icon size={18} />
+            {name}
+          </NavLink>
+        ))}
+      </nav>
+    </div>
+
+    {/* Bottom Section */}
+    <div className="px-3 pb-5 space-y-1">
+      {/* Dark Mode Toggle */}
+      <button
+        onClick={toggleTheme}
+        className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm text-foreground-muted hover:bg-background-muted transition cursor-pointer"
+      >
+        {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        {theme === 'dark' ? "Light Mode" : "Dark Mode"}
+      </button>
+
+      <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm text-foreground-muted hover:bg-background-muted transition cursor-pointer">
+        <HelpCircle size={18} />
+        Help Center
+      </button>
+
+      <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition cursor-pointer">
+        <LogOut size={18} />
+        Logout
+      </button>
+    </div>
+  </div>
+);
+
+const StudentSidebar = ({ isOpen, onClose }) => {
+  const { theme, toggleTheme } = useTheme();
 
   return (
-    <aside className="hidden md:flex w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex-col justify-between min-h-screen transition-colors duration-300">
-      {/* Top Section */}
-      <div>
-        {/* Logo */}
-        <div className="px-6 py-6 text-xl font-bold text-blue-600 tracking-tight">
-          PlaceMate
-        </div>
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 bg-card border-r border-border flex-col min-h-screen transition-colors duration-300 fixed md:relative z-30">
+        <SidebarContent theme={theme} toggleTheme={toggleTheme} />
+      </aside>
 
-        {/* Profile Card */}
-        <div className="mx-4 mb-6 p-4 bg-slate-50 dark:bg-slate-800 rounded-xl flex items-center gap-4 transition-colors">
-          <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-semibold">
-            A
-          </div>
-          <div className="leading-tight">
-            <p className="font-semibold text-sm text-slate-800 dark:text-slate-100">
-              Alex Johnson
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Comp. Sci · 2024
-            </p>
-          </div>
-        </div>
-
-        {/* Menu */}
-        <nav className="space-y-1 px-3">
-          {menuItems.map(({ name, path, icon: Icon }, index) => (
+      {/* Mobile Sidebar Overlay */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
             <motion.div
-              key={name}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-black/50 z-40 md:hidden glass"
+            />
+            {/* Sidebar Slide-in */}
+            <motion.aside
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 left-0 w-64 bg-card border-r border-border z-50 md:hidden overflow-y-auto"
             >
-              <NavLink
-                to={path}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
-                    isActive
-                      ? "bg-blue-50 dark:bg-blue-500/10 text-blue-600 shadow-sm"
-                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`
-                }
-              >
-                <Icon size={18} />
-                {name}
-              </NavLink>
-            </motion.div>
-          ))}
-        </nav>
-      </div>
-
-      {/* Bottom Section */}
-      <div className="px-3 pb-5 space-y-1">
-        {/* Dark Mode Toggle */}
-        <button
-          onClick={() => setDark(!dark)}
-          className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-        >
-          {dark ? <Sun size={18} /> : <Moon size={18} />}
-          {dark ? "Light Mode" : "Dark Mode"}
-        </button>
-
-        <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-          <HelpCircle size={18} />
-          Help Center
-        </button>
-
-        <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition">
-          <LogOut size={18} />
-          Logout
-        </button>
-      </div>
-    </aside>
+              <SidebarContent theme={theme} toggleTheme={toggleTheme} onClose={onClose} />
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

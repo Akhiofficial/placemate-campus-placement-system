@@ -1,7 +1,10 @@
-import { Bell } from "lucide-react";
+import { Bell, Moon, Sun } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTheme } from "../../context/ThemeContext";
 
 const DashboardHeader = () => {
+  const { theme, toggleTheme } = useTheme();
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -11,22 +14,33 @@ const DashboardHeader = () => {
     >
       {/* Left: Title */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 leading-tight">
+        <h1 className="text-3xl font-bold text-foreground leading-tight">
           Welcome back,{" "}
           <span className="text-blue-600">Student</span> 👋
         </h1>
-        <p className="text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-foreground-muted mt-1">
           Here’s what’s happening with your job applications today.
         </p>
       </div>
 
       {/* Right: Actions */}
       <div className="flex items-center gap-3">
+        {/* Theme Toggle */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={toggleTheme}
+          className="p-2.5 rounded-full bg-card border border-border text-foreground-muted hover:bg-background-muted transition cursor-pointer"
+          aria-label="Toggle Theme"
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </motion.button>
+
         {/* Notification */}
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="p-2.5 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+          className="p-2.5 rounded-full bg-card border border-border text-foreground-muted hover:bg-background-muted transition cursor-pointer"
         >
           <Bell size={18} />
         </motion.button>
@@ -35,7 +49,7 @@ const DashboardHeader = () => {
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow-sm"
+          className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow-sm cursor-pointer"
         >
           Browse Jobs
         </motion.button>

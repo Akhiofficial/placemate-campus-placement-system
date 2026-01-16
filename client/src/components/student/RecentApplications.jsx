@@ -9,13 +9,13 @@ const statusStyles = {
 
 const RecentApplications = () => {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 transition-colors">
+    <div className="bg-card rounded-xl border border-border shadow-sm p-6 transition-colors">
       {/* Header */}
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+        <h2 className="text-lg font-semibold text-foreground">
           Recent Applications
         </h2>
-        <button className="text-blue-600 text-sm font-medium hover:underline">
+        <button className="text-blue-600 text-sm font-medium hover:underline cursor-pointer">
           View All
         </button>
       </div>
@@ -23,7 +23,7 @@ const RecentApplications = () => {
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full text-sm min-w-[600px]">
-          <thead className="text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+          <thead className="text-foreground-muted border-b border-border">
             <tr>
               <th className="py-3 text-left font-medium">Company</th>
               <th className="py-3 text-left font-medium">Role</th>
@@ -32,28 +32,27 @@ const RecentApplications = () => {
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+          <tbody className="divide-y divide-border">
             {/* Row 1 */}
             <motion.tr
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
-              className="hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              className="hover:bg-background-muted transition"
             >
-              <td className="py-4 font-medium text-slate-800 dark:text-slate-100">
+              <td className="py-4 font-medium text-foreground">
                 TechCorp Inc.
               </td>
-              <td className="text-slate-600 dark:text-slate-300">
+              <td className="text-foreground-muted">
                 Frontend Developer
               </td>
-              <td className="text-slate-600 dark:text-slate-300">
+              <td className="text-foreground-muted">
                 Oct 24, 2023
               </td>
               <td>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    statusStyles["In Review"]
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles["In Review"]
+                    }`}
                 >
                   In Review
                 </span>
@@ -65,22 +64,21 @@ const RecentApplications = () => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05, duration: 0.3 }}
-              className="hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              className="hover:bg-background-muted transition"
             >
-              <td className="py-4 font-medium text-slate-800 dark:text-slate-100">
+              <td className="py-4 font-medium text-foreground">
                 Cloudify
               </td>
-              <td className="text-slate-600 dark:text-slate-300">
+              <td className="text-foreground-muted">
                 Backend Engineer
               </td>
-              <td className="text-slate-600 dark:text-slate-300">
+              <td className="text-foreground-muted">
                 Oct 18, 2023
               </td>
               <td>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    statusStyles.Interview
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles.Interview
+                    }`}
                 >
                   Interview
                 </span>
@@ -92,22 +90,21 @@ const RecentApplications = () => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.3 }}
-              className="hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              className="hover:bg-background-muted transition"
             >
-              <td className="py-4 font-medium text-slate-800 dark:text-slate-100">
+              <td className="py-4 font-medium text-foreground">
                 DataWorks
               </td>
-              <td className="text-slate-600 dark:text-slate-300">
+              <td className="text-foreground-muted">
                 Data Analyst
               </td>
-              <td className="text-slate-600 dark:text-slate-300">
+              <td className="text-foreground-muted">
                 Oct 12, 2023
               </td>
               <td>
                 <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    statusStyles.Offer
-                  }`}
+                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles.Offer
+                    }`}
                 >
                   Offer
                 </span>
