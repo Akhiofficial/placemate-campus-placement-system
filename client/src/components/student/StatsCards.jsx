@@ -12,7 +12,7 @@ const StatsCards = () => {
 
   if (!stats) {
     return (
-      <p className="text-slate-500 dark:text-slate-400 mb-8 text-sm">
+      <p className="text-foreground-muted mb-8 text-sm">
         Loading dashboard statistics…
       </p>
     );
@@ -58,15 +58,15 @@ const StatsCards = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1, duration: 0.4 }}
             whileHover={{ y: -4 }}
-            className={`rounded-2xl p-6 ${bg} border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-md transition`}
+            className={`rounded-2xl p-6 ${bg} border border-border shadow-sm hover:shadow-md transition`}
           >
             <div className="flex justify-between items-start">
               {/* Left */}
               <div>
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                <p className="text-sm font-medium text-foreground-muted">
                   {title}
                 </p>
-                <h3 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mt-1">
+                <h3 className="text-3xl font-bold text-foreground mt-1">
                   {value}
                 </h3>
                 <p className={`text-sm mt-2 ${color}`}>
