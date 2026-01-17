@@ -208,3 +208,5 @@ const JobCard = ({ job }) => (
 );
 
 export default StudentDashboard;
+// Student dashboard pages implemented
+
