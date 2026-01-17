@@ -1,90 +1,143 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { Search, Filter, Briefcase, MapPin } from "lucide-react";
-import JobCard from "../../components/ui/JobCard";
-import DashboardHeader from "../../components/student/DashboardHeader";
-
-// Dummy Data (Extended)
-const allJobs = [
-    { role: "UX Designer", company: "Uber", location: "San Francisco", logo: "U", logoBg: "bg-black" },
-    { role: "Backend Engineer", company: "Google", location: "Remote", logo: "G", logoBg: "bg-blue-600" },
-    { role: "iOS Developer", company: "Instagram", location: "New York", logo: "I", logoBg: "bg-pink-500" },
-    { role: "Cloud Architect", company: "Amazon", location: "Seattle", logo: "A", logoBg: "bg-orange-500" },
-    { role: "Product Manager", company: "Airbnb", location: "San Francisco", logo: "A", logoBg: "bg-rose-500" },
-    { role: "Frontend Dev", company: "Netflix", location: "Los Gatos", logo: "N", logoBg: "bg-red-600" },
-    { role: "Data Scientist", company: "Spotify", location: "Stockholm", logo: "S", logoBg: "bg-green-500" },
-    { role: "DevOps Engineer", company: "Microsoft", location: "Redmond", logo: "M", logoBg: "bg-blue-500" },
-];
+import React, { useState } from 'react';
+import { useMockData } from '../../context/MockDataContext';
+import {
+    Search,
+    Filter,
+    MapPin,
+    Briefcase,
+    Clock,
+    DollarSign,
+    CircleCheck
+} from 'lucide-react';
 
 const JobListings = () => {
-    const [searchTerm, setSearchTerm] = useState("");
-    const [filter, setFilter] = useState("All");
+    const { jobs, applyForJob, applications } = useMockData();
 
-    const filteredJobs = allJobs.filter((job) =>
-        job.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        job.company.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Local State for Search/Filter
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterType, setFilterType] = useState('All'); // All, Full-time, Internship, Remote
+
+    // Filter Logic
+    const filteredJobs = jobs.filter(job => {
+        const matchesSearch = job.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            job.company.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFilter = filterType === 'All' || job.tags.includes(filterType);
+        return matchesSearch && matchesFilter;
+    });
+
+    const isApplied = (jobId) => applications.some(app => app.jobId === jobId);
 
     return (
-        <main className="flex-1 px-6 py-6 md:px-10 md:py-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-                {/* Reusing Dashboard Header for consistent top bar, or creating a simpler one */}
-                <DashboardHeader />
+        <div className="p-4 lg:p-8 animate-fade-in relative h-full flex flex-col overflow-y-auto no-scrollbar">
+            <header className="mb-8">
+                <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white">Available Opportunities</h1>
+                <p className="text-slate-500 dark:text-slate-400">Explore and apply to top companies hiring now.</p>
+            </header>
 
-                <div className="space-y-6">
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center"
-                    >
-                        <div>
-                            <h1 className="text-2xl font-bold text-foreground">Find Your Dream Job</h1>
-                            <p className="text-foreground-muted mt-1">Browse and apply to the best opportunities for you.</p>
-                        </div>
-
-                        <div className="flex gap-2 w-full md:w-auto">
-                            <div className="relative flex-1 md:w-80">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-muted" size={18} />
-                                <input
-                                    type="text"
-                                    placeholder="Search by role or company..."
-                                    className="w-full pl-10 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition text-foreground"
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                />
-                            </div>
-                            <button className="px-4 py-2.5 bg-card border border-border rounded-xl text-foreground hover:bg-background-muted transition flex items-center gap-2 cursor-pointer">
-                                <Filter size={18} />
-                                <span className="hidden sm:inline">Filters</span>
-                            </button>
-                        </div>
-                    </motion.div>
-
-                    {/* Results */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {filteredJobs.length > 0 ? (
-                            filteredJobs.map((job, index) => (
-                                <JobCard key={index} job={job} index={index} />
-                            ))
-                        ) : (
-                            <div className="col-span-full py-12 text-center text-foreground-muted">
-                                No jobs found matching "{searchTerm}"
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Load More */}
-                    {filteredJobs.length > 0 && (
-                        <div className="flex justify-center mt-8">
-                            <button className="px-6 py-2.5 border border-border bg-card rounded-lg text-sm font-medium text-foreground hover:bg-background-muted transition cursor-pointer">
-                                Load More Jobs
-                            </button>
-                        </div>
-                    )}
-
+            {/* Controls */}
+            <div className="flex flex-col md:flex-row gap-4 mb-8">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                        type="text"
+                        placeholder="Search by role, company, or skills..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-3 rounded-xl border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    />
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
+                    {['All', 'Full-time', 'Internship', 'Remote'].map(type => (
+                        <button
+                            key={type}
+                            onClick={() => setFilterType(type)}
+                            className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all
+                                ${filterType === type
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-blue-400 hover:text-blue-500 dark:hover:text-blue-400'
+                                }`}
+                        >
+                            {type}
+                        </button>
+                    ))}
+                    <button className="px-4 py-2 rounded-lg font-medium text-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center gap-2 hover:bg-slate-100 hover:dark:bg-slate-700/50">
+                        <Filter className="w-4 h-4" /> More Filters
+                    </button>
                 </div>
             </div>
-        </main>
+
+            {/* Job Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-20">
+                {filteredJobs.map((job, index) => (
+                    <div
+                        key={job.id}
+                        className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 hover:shadow-lg transition-all duration-300 flex flex-col animate-fade-in group"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                    >
+                        <div className="flex justify-between items-start mb-4">
+                            <div className="flex gap-4">
+                                <div className={`w-12 h-12 rounded-xl ${job.logoBg} flex items-center justify-center text-white text-lg font-bold shadow-md`}>
+                                    {job.initial}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">{job.role}</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">{job.company}</p>
+                                </div>
+                            </div>
+                            <button className="text-slate-400 hover:text-blue-500 transition-colors">
+                                <div className="w-1 h-1 bg-current rounded-full mb-1"></div>
+                                <div className="w-1 h-1 bg-current rounded-full mb-1"></div>
+                                <div className="w-1 h-1 bg-current rounded-full"></div>
+                            </button>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 mb-6">
+                            {job.tags.map(tag => (
+                                <span key={tag} className="px-2.5 py-1 rounded-md text-xs font-semibold bg-slate-100 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300">
+                                    {tag}
+                                </span>
+                            ))}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-y-3 text-sm mb-6">
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                <DollarSign className="w-4 h-4" /> {job.salary}
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                <MapPin className="w-4 h-4" /> {job.location}
+                            </div>
+                            <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                                <Briefcase className="w-4 h-4" /> {job.type}
+                            </div>
+                            <div className="flex items-center gap-2 text-orange-500 dark:text-orange-400 font-medium">
+                                <Clock className="w-4 h-4" /> {job.posted}
+                            </div>
+                        </div>
+
+                        <div className="mt-auto flex gap-3">
+                            <button className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 font-medium text-slate-700 dark:text-slate-300 transition-colors hover:bg-slate-50 hover:dark:bg-slate-700">
+                                Details
+                            </button>
+                            <button
+                                onClick={() => applyForJob(job)}
+                                disabled={isApplied(job.id)}
+                                className={`flex-1 py-2.5 rounded-xl font-medium text-white shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2
+                                    ${isApplied(job.id)
+                                        ? 'bg-green-600 cursor-default hover:bg-green-600'
+                                        : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20'
+                                    }`}
+                            >
+                                {isApplied(job.id) ? (
+                                    <>
+                                        <CircleCheck className="w-4 h-4" /> Applied
+                                    </>
+                                ) : 'Apply Now'}
+                            </button>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
     );
 };
 

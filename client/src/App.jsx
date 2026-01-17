@@ -1,35 +1,39 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { MockDataProvider } from './context/MockDataContext'
 import Login from './pages/auth/Login'
 import Signup from './pages/auth/Signup'
+import DashboardLayout from './components/layout/DashboardLayout'
 import StudentDashboard from './pages/student/StudentDashboard'
-import StudentProfile from './pages/student/StudentProfile'
 import JobListings from './pages/student/JobListings'
 import MyApplications from './pages/student/MyApplications'
-import MyInterviews from './pages/student/MyInterviews'
-import StudentSettings from './pages/student/StudentSettings'
-import StudentLayout from './components/layout/StudentLayout'
-import { ThemeProvider } from './context/ThemeContext'
+import Interviews from './pages/student/Interviews'
+import Profile from './pages/student/Profile'
+import Settings from './pages/student/Settings'
 
 const App = () => {
   return (
-    <ThemeProvider>
+    <MockDataProvider>
       <BrowserRouter>
         <Routes>
+          {/* Auth Routes */}
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          <Route element={<StudentLayout />}>
-            <Route path="/student/dashboard" element={<StudentDashboard />} />
-            <Route path="/student/profile" element={<StudentProfile />} />
-            <Route path="/student/jobs" element={<JobListings />} />
-            <Route path="/student/applications" element={<MyApplications />} />
-            <Route path="/student/interviews" element={<MyInterviews />} />
-            <Route path="/student/settings" element={<StudentSettings />} />
+          {/* Student Routes Wrapped in DashboardLayout */}
+          <Route path="/student" element={<DashboardLayout />}>
+            <Route path="dashboard" element={<StudentDashboard />} />
+            <Route path="jobs" element={<JobListings />} />
+            <Route path="applications" element={<MyApplications />} />
+            <Route path="interviews" element={<Interviews />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            {/* Redirect /student to dashboard */}
+            <Route index element={<Navigate to="/student/dashboard" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>
-    </ThemeProvider>
+    </MockDataProvider>
   )
 }
 
