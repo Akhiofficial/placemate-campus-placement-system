@@ -1,8 +1,7 @@
 import React from 'react';
 import { MapPin, DollarSign, Clock, Users, FileText, Calendar, Edit2, Code, Megaphone, Server, Palette } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
-const JobCard = ({ job, onPublish }) => {
+const JobCard = ({ job, onPublish, onView, onEdit }) => {
 
     // Status color mapping
     const getStatusColor = (status) => {
@@ -100,20 +99,20 @@ const JobCard = ({ job, onPublish }) => {
                         Publish Now
                     </button>
                 ) : (
-                    <Link
-                        to={`/company/jobs/${job.id}`}
+                    <button
+                        onClick={onView}
                         className="flex-1 flex items-center justify-center bg-white dark:bg-card border border-border hover:bg-gray-50 dark:hover:bg-background-muted text-foreground font-semibold py-2 rounded-lg text-sm transition-colors"
                     >
                         View Details
-                    </Link>
+                    </button>
                 )}
 
-                <Link
-                    to={`/company/jobs/edit/${job.id}`}
+                <button
+                    onClick={onEdit}
                     className="p-2 border border-border rounded-lg text-foreground-muted hover:text-foreground hover:bg-gray-50 dark:hover:bg-background-muted transition-colors"
                 >
                     <Edit2 size={18} />
-                </Link>
+                </button>
             </div>
 
         </div>

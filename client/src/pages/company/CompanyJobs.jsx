@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import JobStats from '../../components/company/jobs/JobStats';
 import JobFilters from '../../components/company/jobs/JobFilters';
 import JobCard from '../../components/company/jobs/JobCard';
+import JobDetailsModal from '../../components/company/jobs/JobDetailsModal';
+import EditJobModal from '../../components/company/jobs/EditJobModal';
 
 // Dummy Data
 const initialJobs = [
@@ -16,7 +18,11 @@ const initialJobs = [
         location: 'San Francisco, CA (Remote)',
         salary: '$120k - $150k / year',
         posted: 'Posted 2 days ago',
-        metrics: { applied: 42, inReview: 12, interview: 5 }
+        metrics: { applied: 42, inReview: 12, interview: 5 },
+        description: 'We are looking for a Senior Software Engineer to lead our product team. You will be responsible for designing scalable architectures and mentoring junior developers.',
+        skills: 'React, Node.js, AWS, TypeScript',
+        workMode: 'Remote',
+        requirements: 'Bachelor\'s degree in Computer Science, 5+ years of experience.'
     },
     {
         id: 2,
@@ -24,10 +30,14 @@ const initialJobs = [
         team: 'Design Team',
         type: 'Full-time',
         status: 'Active',
-        location: 'New York, NY (Hybrid)',
+        location: 'New York, NY',
         salary: '$90k - $120k / year',
         posted: 'Posted 5 days ago',
-        metrics: { applied: 86, inReview: 24, interview: 8 }
+        metrics: { applied: 86, inReview: 24, interview: 8 },
+        description: 'Join our creative team to design intuitive user experiences. You will work closely with product managers and engineers to build beautiful interfaces.',
+        skills: 'Figma, UI/UX, Prototyping, User Research',
+        workMode: 'Hybrid',
+        requirements: 'Portfolio demonstrating strong design skills, proficiency in Figma.'
     },
     {
         id: 3,
@@ -35,10 +45,14 @@ const initialJobs = [
         team: 'Marketing Team',
         type: 'Full-time',
         status: 'Draft',
-        location: 'Austin, TX (On-site)',
+        location: 'Austin, TX',
         salary: 'TBD',
         posted: 'Last edited 2 hours ago',
-        metrics: { applied: 0, inReview: 0, interview: 0 }
+        metrics: { applied: 0, inReview: 0, interview: 0 },
+        description: 'We need a marketing specialist to drive our growth campaigns. Experience in SEO and content marketing is a plus.',
+        skills: 'SEO, Content Marketing, Google Analytics, Social Media',
+        workMode: 'On-site',
+        requirements: 'Experience with digital marketing tools, strong communication skills.'
     },
     {
         id: 4,
@@ -49,7 +63,11 @@ const initialJobs = [
         location: 'Remote',
         salary: '$25 - $35 / hour',
         posted: 'Closed on Oct 12, 2023',
-        metrics: { applied: 154, inReview: 0, interview: 0 }
+        metrics: { applied: 154, inReview: 0, interview: 0 },
+        description: 'Internship opportunity for backend development enthusiasts. Learn from industry experts and work on real-world projects.',
+        skills: 'Python, Django, SQL, API Development',
+        workMode: 'Remote',
+        requirements: 'Basic understanding of backend concepts, willingness to learn.'
     }
 ];
 
@@ -59,9 +77,19 @@ const CompanyJobs = () => {
     const [statusFilter, setStatusFilter] = React.useState('All');
     const [typeFilter, setTypeFilter] = React.useState('All');
 
+    // Modal State
+    const [viewJob, setViewJob] = React.useState(null);
+    const [editJob, setEditJob] = React.useState(null);
+
     const handlePublishJob = (id) => {
         setJobs(jobs.map(job =>
             job.id === id ? { ...job, status: 'Active', posted: 'Just now', metrics: { applied: 0, inReview: 0, interview: 0 } } : job
+        ));
+    };
+
+    const handleSaveJob = (updatedJob) => {
+        setJobs(jobs.map(job =>
+            job.id === updatedJob.id ? updatedJob : job
         ));
     };
 
@@ -110,9 +138,27 @@ const CompanyJobs = () => {
                         job.location.toLowerCase().includes(searchQuery.toLowerCase());
                     return statusMatch && typeMatch && searchMatch;
                 }).map(job => (
-                    <JobCard key={job.id} job={job} onPublish={() => handlePublishJob(job.id)} />
+                    <JobCard
+                        key={job.id}
+                        job={job}
+                        onPublish={() => handlePublishJob(job.id)}
+                        onView={() => setViewJob(job)}
+                        onEdit={() => setEditJob(job)}
+                    />
                 ))}
             </div>
+
+            {/* Modals */}
+            <JobDetailsModal
+                job={viewJob}
+                onClose={() => setViewJob(null)}
+            />
+
+            <EditJobModal
+                job={editJob}
+                onClose={() => setEditJob(null)}
+                onSave={handleSaveJob}
+            />
 
         </div>
     );
