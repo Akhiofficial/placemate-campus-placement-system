@@ -19,6 +19,10 @@ const JobSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    department: {
+        type: String, // e.g. "Product Team", "Engineering Team"
+        trim: true
+    },
     location: {
         type: String,
         required: true,
@@ -60,7 +64,7 @@ const JobSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Open', 'Closed'],
+        enum: ['Open', 'Closed', 'Draft'],
         default: 'Open'
     },
     deadline: {

@@ -5,22 +5,55 @@
   --color-brand-primary: #2563eb;
   --color-brand-primary-hover: #1d4ed8;
 
-  /* Backgrounds */
-  --color-bg-page: #ffffff;
+  /* Light Mode Base */
+  --color-bg-page: #f8fafc;
+  /* Slate-50 for main background */
+  --color-bg-card: #ffffff;
   --color-bg-input: #ffffff;
-  --color-bg-muted: #f3f4f6;
+  --color-bg-muted: #f1f5f9;
+  /* Slate-100 */
+  --color-bg-hover: #f8fafc;
 
-  /* Text */
-  --color-text-main: #111827;
-  --color-text-muted: #6b7280;
+  /* Light Mode Text */
+  --color-text-main: #0f172a;
+  /* Slate-900 */
+  --color-text-muted: #64748b;
+  /* Slate-500 */
   --color-text-inverted: #ffffff;
 
-  /* Borders */
-  --color-border-main: #e5e7eb;
+  /* Light Mode Borders */
+  --color-border-main: #e2e8f0;
+  /* Slate-200 */
   --color-border-focus: #3b82f6;
 
   /* Functional */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
   --color-error: #ef4444;
+}
+
+.dark {
+  /* Dark Mode Base */
+  --color-bg-page: #0f172a;
+  /* Slate-900 */
+  --color-bg-card: #1e293b;
+  /* Slate-800 */
+  --color-bg-input: #1e293b;
+  --color-bg-muted: #334155;
+  /* Slate-700 */
+  --color-bg-hover: #1e293b;
+
+  /* Dark Mode Text */
+  --color-text-main: #f8fafc;
+  /* Slate-50 */
+  --color-text-muted: #94a3b8;
+  /* Slate-400 */
+  --color-text-inverted: #0f172a;
+
+  /* Dark Mode Borders */
+  --color-border-main: #334155;
+  /* Slate-700 */
+  --color-border-focus: #3b82f6;
 }
 
 @theme {
@@ -28,8 +61,10 @@
   --color-primary-hover: var(--color-brand-primary-hover);
 
   --color-background: var(--color-bg-page);
+  --color-card: var(--color-bg-card);
   --color-background-muted: var(--color-bg-muted);
   --color-background-input: var(--color-bg-input);
+  --color-background-hover: var(--color-bg-hover);
 
   --color-foreground: var(--color-text-main);
   --color-foreground-muted: var(--color-text-muted);
@@ -38,6 +73,8 @@
   --color-border: var(--color-border-main);
   --color-ring: var(--color-border-focus);
 
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
   --color-error: var(--color-error);
 }
 

@@ -55,8 +55,17 @@ const InterviewSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Scheduled', 'Completed', 'Cancelled', 'Rescheduled'],
-        default: 'Scheduled'
+        enum: ['Scheduled', 'Confirmed', 'Pending', 'Completed', 'Cancelled', 'Rescheduled'],
+        default: 'Pending'
+    },
+    feedback: {
+        type: String,
+        trim: true
+    },
+    feedbackStatus: {
+        type: String,
+        enum: ['Pending', 'Submitted'],
+        default: 'Pending'
     },
     logo: {
         type: String // Company logo url for UI

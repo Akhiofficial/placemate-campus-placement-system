@@ -37,6 +37,7 @@ app.use('/api/jobs', jobRoutes); // Jobs
 app.use('/api/applications', applicationRoutes); // Applications
 app.use('/api/interviews', interviewRoutes); // Interviews
 app.use('/api/notifications', notificationRoutes); // Notifications
+app.use('/api/company', require('./routes/company')); // Company Dashboard
 
 // Socket.io for WebRTC Signaling
 io.on('connection', (socket) => {
