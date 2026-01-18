@@ -20,6 +20,13 @@ import CompanyProfile from './pages/company/CompanyProfile'
 import CompanySettings from './pages/company/CompanySettings'
 import { ThemeProvider } from './context/ThemeContext'
 
+import AdminLayout from './components/layout/AdminLayout'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminStudents from './pages/admin/AdminStudents'
+import AdminCompanies from './pages/admin/AdminCompanies'
+import AdminJobs from './pages/admin/AdminJobs'
+import AdminApplications from './pages/admin/AdminApplications'
+
 const App = () => {
   return (
     <ThemeProvider>
@@ -48,6 +55,16 @@ const App = () => {
             <Route path="/company/interviews/edit/:id" element={<ScheduleInterview />} />
             <Route path="/company/profile" element={<CompanyProfile />} />
             <Route path="/company/settings" element={<CompanySettings />} />
+          </Route>
+
+          {/* Admin Routes */}
+          <Route element={<AdminLayout />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/students" element={<AdminStudents />} />
+            <Route path="/admin/companies" element={<AdminCompanies />} />
+            <Route path="/admin/jobs" element={<AdminJobs />} />
+            <Route path="/admin/applications" element={<AdminApplications />} />
+            <Route path="/admin/settings" element={<div className="p-8">Settings Page (Coming Soon)</div>} />
           </Route>
         </Routes>
       </BrowserRouter>
