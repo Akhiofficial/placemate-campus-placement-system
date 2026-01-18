@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, ChevronDown, Link as LinkIcon, Info, Search as SearchIcon, Check, Clock } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 const ScheduleInterview = () => {
     const navigate = useNavigate();
+
+    const { id } = useParams();
+    const isEditMode = !!id;
 
     // Form State
     const [formData, setFormData] = useState({
@@ -17,6 +20,27 @@ const ScheduleInterview = () => {
         link: '',
         notes: ''
     });
+
+    useEffect(() => {
+        if (isEditMode) {
+            // Mock fetching data based on ID
+            // In a real app, this would be an API call
+            console.log("Fetching interview details for ID:", id);
+
+            // Simulating data fetch
+            setFormData({
+                candidate: 'John Doe',
+                role: 'sde',
+                date: '2023-10-24',
+                startTime: '10:00',
+                endTime: '11:00',
+                type: 'Technical',
+                platform: 'meet',
+                link: 'https://meet.google.com/abc-defg-hij',
+                notes: 'Rescheduling requested by candidate.'
+            });
+        }
+    }, [id, isEditMode]);
 
     // Dropdown State
     const [activeDropdown, setActiveDropdown] = useState(null);
@@ -89,7 +113,7 @@ const ScheduleInterview = () => {
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <h1 className="text-2xl font-bold text-foreground">Schedule New Interview</h1>
+                <h1 className="text-2xl font-bold text-foreground">{isEditMode ? 'Reschedule Interview' : 'Schedule New Interview'}</h1>
                 <div className="flex-1"></div>
             </div>
 
@@ -97,7 +121,7 @@ const ScheduleInterview = () => {
             <div className="flex items-center gap-2 text-sm text-foreground-muted mb-6 px-1">
                 <Link to="/company/interviews" className="hover:text-blue-600 transition-colors">Interviews</Link>
                 <span className="text-gray-400">›</span>
-                <span className="text-foreground font-medium">Schedule New Interview</span>
+                <span className="text-foreground font-medium">{isEditMode ? 'Reschedule' : 'Schedule New Interview'}</span>
             </div>
 
             {/* Main Form Card */}
@@ -365,7 +389,7 @@ const ScheduleInterview = () => {
                             type="submit"
                             className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors"
                         >
-                            Schedule Interview
+                            {isEditMode ? 'Update Schedule' : 'Schedule Interview'}
                         </button>
                     </div>
                 </form>

@@ -96,7 +96,7 @@ const RecentJobPostings = () => {
                                     <div className="flex items-center gap-2">
                                         <div className="flex -space-x-2">
                                             {job.applicantsImages.map((img, i) => (
-                                                <img key={i} src={img} alt="Applicant" className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 object-cover" />
+                                                <img key={i} src={img} alt="Applicant" className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 object-cover shrink-0" />
                                             ))}
                                         </div>
                                         <span className="text-foreground-muted font-medium text-xs">

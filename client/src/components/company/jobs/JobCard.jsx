@@ -1,7 +1,8 @@
 import React from 'react';
 import { MapPin, DollarSign, Clock, Users, FileText, Calendar, Edit2, Code, Megaphone, Server, Palette } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const JobCard = ({ job }) => {
+const JobCard = ({ job, onPublish }) => {
 
     // Status color mapping
     const getStatusColor = (status) => {
@@ -47,7 +48,7 @@ const JobCard = ({ job }) => {
                     </div>
                 </div>
                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusColor(job.status)}`}>
-                    • {job.status}
+                    {job.status}
                 </span>
             </div>
 
@@ -92,18 +93,27 @@ const JobCard = ({ job }) => {
             {/* Actions */}
             <div className="mt-auto flex gap-3">
                 {job.status === 'Draft' ? (
-                    <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg text-sm transition-colors">
+                    <button
+                        onClick={onPublish}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg text-sm transition-colors"
+                    >
                         Publish Now
                     </button>
                 ) : (
-                    <button className="flex-1 bg-white dark:bg-card border border-border hover:bg-gray-50 dark:hover:bg-background-muted text-foreground font-semibold py-2 rounded-lg text-sm transition-colors">
+                    <Link
+                        to={`/company/jobs/${job.id}`}
+                        className="flex-1 flex items-center justify-center bg-white dark:bg-card border border-border hover:bg-gray-50 dark:hover:bg-background-muted text-foreground font-semibold py-2 rounded-lg text-sm transition-colors"
+                    >
                         View Details
-                    </button>
+                    </Link>
                 )}
 
-                <button className="p-2 border border-border rounded-lg text-foreground-muted hover:text-foreground hover:bg-gray-50 dark:hover:bg-background-muted transition-colors">
+                <Link
+                    to={`/company/jobs/edit/${job.id}`}
+                    className="p-2 border border-border rounded-lg text-foreground-muted hover:text-foreground hover:bg-gray-50 dark:hover:bg-background-muted transition-colors"
+                >
                     <Edit2 size={18} />
-                </button>
+                </Link>
             </div>
 
         </div>

@@ -5,8 +5,8 @@ import JobStats from '../../components/company/jobs/JobStats';
 import JobFilters from '../../components/company/jobs/JobFilters';
 import JobCard from '../../components/company/jobs/JobCard';
 
-// Dummy data
-const jobs = [
+// Dummy Data
+const initialJobs = [
     {
         id: 1,
         title: 'Senior Software Engineer',
@@ -54,6 +54,17 @@ const jobs = [
 ];
 
 const CompanyJobs = () => {
+    const [jobs, setJobs] = React.useState(initialJobs);
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const [statusFilter, setStatusFilter] = React.useState('All');
+    const [typeFilter, setTypeFilter] = React.useState('All');
+
+    const handlePublishJob = (id) => {
+        setJobs(jobs.map(job =>
+            job.id === id ? { ...job, status: 'Active', posted: 'Just now', metrics: { applied: 0, inReview: 0, interview: 0 } } : job
+        ));
+    };
+
     return (
         <div className="max-w-7xl mx-auto space-y-6">
 
@@ -81,12 +92,25 @@ const CompanyJobs = () => {
             <JobStats />
 
             {/* Filters */}
-            <JobFilters />
+            <JobFilters
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+                typeFilter={typeFilter}
+                setTypeFilter={setTypeFilter}
+            />
 
             {/* Job Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {jobs.map(job => (
-                    <JobCard key={job.id} job={job} />
+                {jobs.filter(job => {
+                    const statusMatch = statusFilter === 'All' || job.status === statusFilter;
+                    const typeMatch = typeFilter === 'All' || job.type === typeFilter;
+                    const searchMatch = job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        job.location.toLowerCase().includes(searchQuery.toLowerCase());
+                    return statusMatch && typeMatch && searchMatch;
+                }).map(job => (
+                    <JobCard key={job.id} job={job} onPublish={() => handlePublishJob(job.id)} />
                 ))}
             </div>
 

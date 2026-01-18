@@ -1,54 +1,7 @@
 import React, { useState } from 'react';
 import { Eye, MoreHorizontal, Download, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const candidates = [
-    {
-        id: 1,
-        name: 'Sarah Johnson',
-        email: 'sarah.j@uni.edu',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        degree: 'B.Tech (CS)',
-        cgpa: '9.4 CGPA',
-        skills: ['React', 'Node.js', '+2'],
-        aiMatch: 96,
-        status: 'Shortlisted'
-    },
-    {
-        id: 2,
-        name: 'Michael Chen',
-        email: 'michael.c@uni.edu',
-        image: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        degree: 'B.Tech (IT)',
-        cgpa: '8.8 CGPA',
-        skills: ['Python', 'Django'],
-        aiMatch: 85,
-        status: 'Pending'
-    },
-    {
-        id: 3,
-        name: 'Aisha Rao',
-        email: 'aisha.r@uni.edu',
-        image: 'https://ui-avatars.com/api/?name=Aisha+Rao&background=EBF4FF&color=7F9CF5',
-        degree: 'B.Tech (ECE)',
-        cgpa: '7.9 CGPA',
-        skills: ['C++', 'Embedded'],
-        aiMatch: 62,
-        status: 'Rejected'
-    },
-    {
-        id: 4,
-        name: 'David Kim',
-        email: 'david.k@uni.edu',
-        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        degree: 'B.Tech (CS)',
-        cgpa: '8.9 CGPA',
-        skills: ['Java', 'Spring'],
-        aiMatch: 82,
-        status: 'Pending'
-    },
-];
-
-const ApplicationsTable = () => {
+const ApplicationsTable = ({ candidates }) => {
     const [selected, setSelected] = useState([]);
 
     const toggleSelect = (id) => {
@@ -114,7 +67,7 @@ const ApplicationsTable = () => {
                                     </td>
                                     <td className="p-4">
                                         <div className="flex items-center gap-3">
-                                            <img src={candidate.image} alt={candidate.name} className="w-10 h-10 rounded-full object-cover border border-gray-100 dark:border-border" />
+                                            <img src={candidate.image} alt={candidate.name} className="w-10 h-10 rounded-full object-cover border border-gray-100 dark:border-border shrink-0" />
                                             <div>
                                                 <h4 className="font-bold text-gray-900 dark:text-foreground text-sm">{candidate.name}</h4>
                                                 <p className="text-xs text-gray-500 dark:text-foreground-muted">{candidate.email}</p>
@@ -176,7 +129,7 @@ const ApplicationsTable = () => {
 
             {/* Pagination */}
             <div className="p-4 border-t border-border bg-gray-50/30 dark:bg-card flex flex-col md:flex-row justify-between items-center gap-4">
-                <span className="text-sm text-foreground-muted">Showing 1 to 4 of 45 results</span>
+                <span className="text-sm text-foreground-muted">Showing {candidates.length} results</span>
                 <div className="flex items-center gap-1">
                     <button className="p-1 px-3 border border-border bg-white dark:bg-card rounded hover:bg-gray-50 dark:hover:bg-background-muted text-foreground-muted disabled:opacity-50">
                         <ChevronLeft size={16} />

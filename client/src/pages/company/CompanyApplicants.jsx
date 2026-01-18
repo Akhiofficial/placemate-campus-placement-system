@@ -5,7 +5,88 @@ import ApplicationsStats from '../../components/company/applicants/ApplicationsS
 import ApplicationsFilters from '../../components/company/applicants/ApplicationsFilters';
 import ApplicationsTable from '../../components/company/applicants/ApplicationsTable';
 
+// Dummy Data moved from Table
+const candidatesData = [
+    {
+        id: 1,
+        name: 'Sarah Johnson',
+        email: 'sarah.j@uni.edu',
+        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        degree: 'B.Tech (CS)',
+        cgpa: '9.4 CGPA',
+        cgpaValue: 9.4,
+        skills: ['React', 'Node.js', '+2'],
+        aiMatch: 96,
+        status: 'Shortlisted'
+    },
+    {
+        id: 2,
+        name: 'Michael Chen',
+        email: 'michael.c@uni.edu',
+        image: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        degree: 'B.Tech (IT)',
+        cgpa: '8.8 CGPA',
+        cgpaValue: 8.8,
+        skills: ['Python', 'Django'],
+        aiMatch: 85,
+        status: 'Pending'
+    },
+    {
+        id: 3,
+        name: 'Aisha Rao',
+        email: 'aisha.r@uni.edu',
+        image: 'https://ui-avatars.com/api/?name=Aisha+Rao&background=EBF4FF&color=7F9CF5',
+        degree: 'B.Tech (ECE)',
+        cgpa: '7.9 CGPA',
+        cgpaValue: 7.9,
+        skills: ['C++', 'Embedded'],
+        aiMatch: 62,
+        status: 'Rejected'
+    },
+    {
+        id: 4,
+        name: 'David Kim',
+        email: 'david.k@uni.edu',
+        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+        degree: 'B.Tech (CS)',
+        cgpa: '8.9 CGPA',
+        cgpaValue: 8.9,
+        skills: ['Java', 'Spring'],
+        aiMatch: 82,
+        status: 'Pending'
+    },
+];
+
 const CompanyApplicants = () => {
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const [roleFilter, setRoleFilter] = React.useState('All');
+    const [cgpaFilter, setCgpaFilter] = React.useState('All');
+    const [statusFilter, setStatusFilter] = React.useState('All');
+
+    // Filtering Logic
+    const filteredCandidates = candidatesData.filter(candidate => {
+        // Search
+        const searchLower = searchQuery.toLowerCase();
+        const searchMatch =
+            candidate.name.toLowerCase().includes(searchLower) ||
+            candidate.email.toLowerCase().includes(searchLower) ||
+            candidate.skills.some(skill => skill.toLowerCase().includes(searchLower));
+
+        // Role (Mock logic as role isn't in data, assuming All for now or matching degree)
+        const roleMatch = roleFilter === 'All' || candidate.degree.includes(roleFilter);
+
+        // CGPA
+        let cgpaMatch = true;
+        if (cgpaFilter === '> 9.0') cgpaMatch = candidate.cgpaValue >= 9.0;
+        else if (cgpaFilter === '> 8.0') cgpaMatch = candidate.cgpaValue >= 8.0;
+        else if (cgpaFilter === '> 7.0') cgpaMatch = candidate.cgpaValue >= 7.0;
+
+        // Status
+        const statusMatch = statusFilter === 'All' || candidate.status === statusFilter;
+
+        return searchMatch && roleMatch && cgpaMatch && statusMatch;
+    });
+
     return (
         <div className="max-w-7xl mx-auto">
             {/* Header */}
@@ -30,10 +111,19 @@ const CompanyApplicants = () => {
             <ApplicationsStats />
 
             {/* Filters */}
-            <ApplicationsFilters />
+            <ApplicationsFilters
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                roleFilter={roleFilter}
+                setRoleFilter={setRoleFilter}
+                cgpaFilter={cgpaFilter}
+                setCgpaFilter={setCgpaFilter}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
+            />
 
             {/* Table */}
-            <ApplicationsTable />
+            <ApplicationsTable candidates={filteredCandidates} />
         </div>
     );
 };

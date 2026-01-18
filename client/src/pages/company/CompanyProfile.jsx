@@ -427,8 +427,7 @@ const CompanyProfile = () => {
                         </div>
                     </div>
 
-                    {/* Profile Strength */}
-                    <div className="gradient-to-br from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
+                    <div className="bg-linear-to-br from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
                         <div className="relative z-10">
                             <h2 className="text-lg font-bold mb-2">Profile Strength: Strong</h2>
                             <div className="w-full bg-black/20 rounded-full h-2 mb-4 backdrop-blur-sm">
@@ -446,6 +445,7 @@ const CompanyProfile = () => {
                         <div className="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 bg-white/5 rounded-full blur-2xl"></div>
                         <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-32 h-32 bg-black/10 rounded-full blur-xl"></div>
                     </div>
+
                 </div>
             </div>
         </div>
