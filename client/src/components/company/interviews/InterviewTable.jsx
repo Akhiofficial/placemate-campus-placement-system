@@ -168,9 +168,9 @@ const InterviewTable = ({ activeTab, searchQuery, roleFilter, statusFilter }) =>
             </div>
 
             {/* Pagination (Simple for now) */}
-            <div className="p-4 border-t border-border flex justify-between items-center text-sm text-gray-500 dark:text-gray-400">
-                <span>Showing {filteredInterviews.length} results</span>
-                <div className="flex gap-2">
+            <div className="p-4 border-t border-border flex flex-col md:flex-row gap-4 justify-between items-center text-sm text-gray-500 dark:text-gray-400">
+                <span className="text-center md:text-left">Showing {filteredInterviews.length} results</span>
+                <div className="flex gap-2 w-full md:w-auto justify-center md:justify-end">
                     <button className="px-3 py-1 border border-border rounded hover:bg-gray-50 dark:hover:bg-background-muted transition-colors disabled:opacity-50">Previous</button>
                     <button className="px-3 py-1 border border-border rounded hover:bg-gray-50 dark:hover:bg-background-muted transition-colors">Next</button>
                 </div>

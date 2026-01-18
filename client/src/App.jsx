@@ -17,6 +17,7 @@ import CompanyApplicants from './pages/company/CompanyApplicants'
 import CompanyInterviews from './pages/company/CompanyInterviews'
 import ScheduleInterview from './pages/company/ScheduleInterview'
 import CompanyProfile from './pages/company/CompanyProfile'
+import CompanySettings from './pages/company/CompanySettings'
 import { ThemeProvider } from './context/ThemeContext'
 
 const App = () => {
@@ -45,6 +46,7 @@ const App = () => {
             <Route path="/company/interviews" element={<CompanyInterviews />} />
             <Route path="/company/interviews/schedule" element={<ScheduleInterview />} />
             <Route path="/company/profile" element={<CompanyProfile />} />
+            <Route path="/company/settings" element={<CompanySettings />} />
           </Route>
         </Routes>
       </BrowserRouter>

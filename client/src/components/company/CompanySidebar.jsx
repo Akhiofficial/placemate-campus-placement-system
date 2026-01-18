@@ -75,10 +75,18 @@ const SidebarContent = ({ theme, toggleTheme, onClose }) => (
             </button>
 
             {/* Settings */}
-            <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-foreground hover:bg-background-muted transition-colors cursor-pointer">
+            <NavLink
+                to="/company/settings"
+                onClick={onClose}
+                className={({ isActive }) =>
+                    `flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors cursor-pointer ${isActive
+                        ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600'
+                        : 'text-foreground hover:bg-background-muted'}`
+                }
+            >
                 <Settings size={20} />
                 Settings
-            </button>
+            </NavLink>
 
             {/* Log Out */}
             <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer group">

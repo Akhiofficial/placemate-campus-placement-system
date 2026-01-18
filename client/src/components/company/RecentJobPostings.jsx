@@ -85,8 +85,8 @@ const RecentJobPostings = () => {
                                 <td className="px-6 py-4 text-foreground-muted font-medium">{job.date}</td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${job.status === 'Active'
-                                            ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/20 dark:text-green-400 dark:border-green-800'
-                                            : 'bg-slate-800 text-white border-slate-700 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600'
+                                        ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/20 dark:text-green-400 dark:border-green-800'
+                                        : 'bg-slate-800 text-white border-slate-700 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600'
                                         }`}>
                                         <span className={`w-1.5 h-1.5 rounded-full ${job.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                                         {job.status}
@@ -112,10 +112,10 @@ const RecentJobPostings = () => {
                     </tbody>
                 </table>
             </div>
-            <div className="p-4 border-t border-border flex items-center justify-between bg-card">
+            <div className="p-4 border-t border-border flex flex-col md:flex-row gap-4 items-center justify-between bg-card">
                 {/* Pagination Text - Adapting colors */}
-                <span className="text-sm text-foreground-muted">Showing <span className="font-semibold text-foreground">1</span> to <span className="font-semibold text-foreground">3</span> of <span className="font-semibold text-foreground">12</span> jobs</span>
-                <div className="flex gap-2">
+                <span className="text-sm text-foreground-muted text-center md:text-left">Showing <span className="font-semibold text-foreground">1</span> to <span className="font-semibold text-foreground">3</span> of <span className="font-semibold text-foreground">12</span> jobs</span>
+                <div className="flex gap-2 w-full md:w-auto justify-center md:justify-end">
                     <button className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-foreground-muted hover:bg-background-muted disabled:opacity-50 transition-colors bg-card cursor-pointer">Previous</button>
                     <button className="px-4 py-2 border border-border rounded-lg text-sm font-medium text-foreground-muted hover:bg-background-muted transition-colors bg-card cursor-pointer">Next</button>
                 </div>
