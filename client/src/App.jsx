@@ -27,6 +27,8 @@ import AdminCompanies from './pages/admin/AdminCompanies'
 import AdminJobs from './pages/admin/AdminJobs'
 import AdminApplications from './pages/admin/AdminApplications'
 
+import AdminSettings from './pages/admin/AdminSettings'
+
 const App = () => {
   return (
     <ThemeProvider>
@@ -64,7 +66,7 @@ const App = () => {
             <Route path="/admin/companies" element={<AdminCompanies />} />
             <Route path="/admin/jobs" element={<AdminJobs />} />
             <Route path="/admin/applications" element={<AdminApplications />} />
-            <Route path="/admin/settings" element={<div className="p-8">Settings Page (Coming Soon)</div>} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
         </Routes>
       </BrowserRouter>
