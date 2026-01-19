@@ -128,7 +128,7 @@ const AdminCompanies = () => {
             name: 'TechCorp Inc.',
             location: 'San Francisco, CA',
             industry: 'Technology',
-            industryColor: 'bg-blue-100 text-blue-950 dark:bg-blue-900/30 dark:text-blue-300',
+            industryColor: 'bg-blue-100 text-blue-950 dark:bg-blue-900/10 dark:text-blue-300',
             contactName: 'Sarah Jenkins',
             contactEmail: 'sarah.j@techcorp.com',
             jobs: 5,
@@ -140,7 +140,7 @@ const AdminCompanies = () => {
             name: 'Innovate Systems',
             location: 'Austin, TX',
             industry: 'Consulting',
-            industryColor: 'bg-purple-100 text-purple-950 dark:bg-purple-900/30 dark:text-purple-300',
+            industryColor: 'bg-purple-100 text-purple-950 dark:bg-purple-900/10 dark:text-purple-300',
             contactName: 'Mike Ross',
             contactEmail: 'mike.r@innovate.com',
             jobs: 2,
@@ -152,7 +152,7 @@ const AdminCompanies = () => {
             name: 'FinSafe Bank',
             location: 'New York, NY',
             industry: 'Finance',
-            industryColor: 'bg-green-100 text-green-950 dark:bg-green-900/30 dark:text-green-300',
+            industryColor: 'bg-green-100 text-green-950 dark:bg-green-900/10 dark:text-green-300',
             contactName: 'Amanda Lee',
             contactEmail: 'a.lee@finsafe.com',
             jobs: 0,
@@ -164,12 +164,12 @@ const AdminCompanies = () => {
             name: 'Grid Energy',
             location: 'Denver, CO',
             industry: 'Energy',
-            industryColor: 'bg-orange-100 text-orange-950 dark:bg-orange-900/30 dark:text-orange-300',
+            industryColor: 'bg-orange-100 text-orange-950 dark:bg-orange-900/10 dark:text-orange-300',
             contactName: 'David Chen',
             contactEmail: 'd.chen@gridenergy.com',
             jobs: 1,
             status: 'Blocked',
-            statusColor: 'bg-red-100 text-red-950 dark:bg-red-900/30 dark:text-red-300'
+            statusColor: 'bg-red-100 text-red-950 dark:bg-red-900/10 dark:text-red-300'
         },
     ];
 
@@ -178,7 +178,7 @@ const AdminCompanies = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-foreground">Company Management</h1>
+                    <h1 className="text-2xl font-bold mb-4 text-foreground">Company Management</h1>
                     <div className="flex flex-1 md:max-w-xl gap-3 mt-4 md:mt-0">
                         <div className="relative flex-1 min-w-[300px]">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -289,7 +289,7 @@ const AdminCompanies = () => {
                             <h3 className="text-lg font-semibold text-foreground">Company Registrations</h3>
                             <p className="text-sm text-muted-foreground">New partners onboarded over last 6 months</p>
                         </div>
-                        <span className="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded text-xs font-semibold flex items-center">
+                        <span className="bg-green-50 text-green-700 dark:bg-green-700/10 dark:text-green-400 px-2 py-1 rounded text-xs font-semibold flex items-center">
                             <TrendingUp className="w-3 h-3 mr-1" />
                             +8% Growth
                         </span>

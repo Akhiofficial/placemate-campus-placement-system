@@ -56,22 +56,22 @@ const AdminStudents = () => {
     ];
 
     const topSkills = [
-        { name: 'Python', percent: 85, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
-        { name: 'Java', percent: 72, color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-        { name: 'ReactJS', percent: 65, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300' },
-        { name: 'SQL', percent: 60, color: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' },
-        { name: 'AWS', percent: 45, color: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300' },
-        { name: 'Node.js', percent: 40, color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300' },
-        { name: 'C++', percent: 38, color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300' },
-        { name: 'Figma', percent: 25, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
+        { name: 'Python', percent: 85, color: 'bg-blue-100 text-blue-700 dark:bg-blue-700/15 dark:text-blue-500' },
+        { name: 'Java', percent: 72, color: 'bg-green-100 text-green-700 dark:bg-green-700/15 dark:text-green-500' },
+        { name: 'ReactJS', percent: 65, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-700/15 dark:text-indigo-500' },
+        { name: 'SQL', percent: 60, color: 'bg-orange-100 text-orange-700 dark:bg-orange-700/15 dark:text-orange-500' },
+        { name: 'AWS', percent: 45, color: 'bg-slate-100 text-slate-700 dark:bg-slate-700/15 dark:text-slate-500' },
+        { name: 'Node.js', percent: 40, color: 'bg-teal-100 text-teal-700 dark:bg-teal-700/15 dark:text-teal-500' },
+        { name: 'C++', percent: 38, color: 'bg-pink-100 text-pink-700 dark:bg-pink-700/15 dark:text-pink-500' },
+        { name: 'Figma', percent: 25, color: 'bg-purple-100 text-purple-700 dark:bg-purple-700/15 dark:text-purple-500' },
     ];
 
     // Dummy Data for Student List
     const students = [
-        { id: 1, name: 'Sarah Jenkins', email: 'sarah.j@campus.edu', roll: 'CS-2024-042', dept: 'Computer Science', cgpa: 9.2, skills: ['Python', 'React'], status: 'Placed', statusColor: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
-        { id: 2, name: 'Michael Chen', email: 'm.chen@campus.edu', roll: 'IT-2024-108', dept: 'Info Tech', cgpa: 8.5, skills: ['Java', 'AWS'], status: 'Seeking', statusColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' },
-        { id: 3, name: 'Jessica Wong', email: 'jess.w@campus.edu', roll: 'ECE-2024-015', dept: 'Electronics', cgpa: 7.8, skills: ['IoT', 'C++'], status: 'Interning', statusColor: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400' },
-        { id: 4, name: 'David Ross', email: 'd.ross@campus.edu', roll: 'ME-2024-089', dept: 'Mechanical', cgpa: 9.5, skills: ['AutoCAD'], status: 'Placed', statusColor: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' },
+        { id: 1, name: 'Sarah Jenkins', email: 'sarah.j@campus.edu', roll: 'CS-2024-042', dept: 'Computer Science', cgpa: 9.2, skills: ['Python', 'React'], status: 'Placed', statusColor: 'bg-green-100 text-green-700 dark:bg-green-700/15 dark:text-green-500' },
+        { id: 2, name: 'Michael Chen', email: 'm.chen@campus.edu', roll: 'IT-2024-108', dept: 'Info Tech', cgpa: 8.5, skills: ['Java', 'AWS'], status: 'Seeking', statusColor: 'bg-amber-100 text-amber-700 dark:bg-amber-700/15 dark:text-amber-500' },
+        { id: 3, name: 'Jessica Wong', email: 'jess.w@campus.edu', roll: 'ECE-2024-015', dept: 'Electronics', cgpa: 7.8, skills: ['IoT', 'C++'], status: 'Interning', statusColor: 'bg-blue-100 text-blue-700 dark:bg-blue-700/15 dark:text-blue-500' },
+        { id: 4, name: 'David Ross', email: 'd.ross@campus.edu', roll: 'ME-2024-089', dept: 'Mechanical', cgpa: 9.5, skills: ['AutoCAD'], status: 'Placed', statusColor: 'bg-green-100 text-green-700 dark:bg-green-700/15 dark:text-green-500' },
     ];
 
     return (
@@ -240,7 +240,7 @@ const AdminStudents = () => {
                                         <div className="text-xs text-muted-foreground">{student.dept}</div>
                                     </td>
                                     <td className="p-4">
-                                        <span className="inline-block px-2 py-1 bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 text-xs font-bold rounded">
+                                        <span className="inline-block px-2 py-1 bg-green-50 text-green-700 dark:bg-green-700/15 dark:text-green-500 text-xs font-bold rounded">
                                             {student.cgpa}
                                         </span>
                                     </td>
@@ -255,7 +255,7 @@ const AdminStudents = () => {
                                     </td>
                                     <td className="p-4">
                                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${student.statusColor}`}>
-                                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${student.statusColor.replace('bg-', 'bg-opacity-100 bg-').split(' ')[0].replace('100', '500')}`}></span>
+                                            <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${student.statusColor.replace('bg-', 'bg-opac+ity-100 bg-').split(' ')[0].replace('100', '500')}`}></span>
                                             {student.status}
                                         </span>
                                     </td>

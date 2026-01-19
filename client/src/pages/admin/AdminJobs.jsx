@@ -108,10 +108,10 @@ const AdminJobs = () => {
 
     // Jobs Data
     const jobs = [
-        { id: 1, title: 'Senior Software Engineer', company: 'TechCorp Inc.', type: 'Full-time', posted: 'Oct 24, 2024', location: 'Remote', applicants: 145, status: 'Active', statusColor: 'bg-green-100 text-green-950 dark:bg-green-900/30 dark:text-green-400', logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=TechCorp' },
-        { id: 2, title: 'Marketing Intern', company: 'Innovate Systems', type: 'Internship', posted: 'Oct 22, 2024', location: 'On-site', applicants: 28, status: 'Pending', statusColor: 'bg-amber-100 text-amber-950 dark:bg-amber-900/30 dark:text-amber-400', logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=Innovate' },
-        { id: 3, title: 'Product Designer', company: 'Creative Studios', type: 'Contract', posted: 'Oct 20, 2024', location: 'Hybrid', applicants: 56, status: 'Active', statusColor: 'bg-green-100 text-green-950 dark:bg-green-900/30 dark:text-green-400', logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=Creative' },
-        { id: 4, title: 'Data Scientist', company: 'DataFlow', type: 'Full-time', posted: 'Oct 18, 2024', location: 'Remote', applicants: 89, status: 'Closed', statusColor: 'bg-gray-100 text-gray-950 dark:bg-gray-800 dark:text-gray-400', logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=DataFlow' },
+        { id: 1, title: 'Senior Software Engineer', company: 'TechCorp Inc.', type: 'Full-time', posted: 'Oct 24, 2024', location: 'Remote', applicants: 145, status: 'Active', statusColor: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=TechCorp' },
+        { id: 2, title: 'Marketing Intern', company: 'Innovate Systems', type: 'Internship', posted: 'Oct 22, 2024', location: 'On-site', applicants: 28, status: 'Pending', statusColor: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400', logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=Innovate' },
+        { id: 3, title: 'Product Designer', company: 'Creative Studios', type: 'Contract', posted: 'Oct 20, 2024', location: 'Hybrid', applicants: 56, status: 'Active', statusColor: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=Creative' },
+        { id: 4, title: 'Data Scientist', company: 'DataFlow', type: 'Full-time', posted: 'Oct 18, 2024', location: 'Remote', applicants: 89, status: 'Closed', statusColor: 'bg-gray-600 text-gray-100 dark:bg-gray-700 dark:text-gray-300', logo: 'https://api.dicebear.com/7.x/identicon/svg?seed=DataFlow' },
     ];
 
     return (
@@ -270,7 +270,7 @@ const AdminJobs = () => {
                                             </div>
                                         </td>
                                         <td className="p-4">
-                                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-100 dark:border-blue-800">
+                                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
                                                 {job.type}
                                             </span>
                                         </td>
