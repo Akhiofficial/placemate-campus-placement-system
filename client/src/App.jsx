@@ -6,6 +6,7 @@ import ResetPassword from './pages/auth/ResetPassword'
 import StudentDashboard from './pages/student/StudentDashboard'
 import StudentProfile from './pages/student/StudentProfile'
 import JobListings from './pages/student/JobListings'
+import JobDetails from './pages/student/JobDetails'
 import MyApplications from './pages/student/MyApplications'
 import MyInterviews from './pages/student/MyInterviews'
 import StudentSettings from './pages/student/StudentSettings'
@@ -43,6 +44,7 @@ const App = () => {
             <Route path="/student/dashboard" element={<StudentDashboard />} />
             <Route path="/student/profile" element={<StudentProfile />} />
             <Route path="/student/jobs" element={<JobListings />} />
+            <Route path="/student/jobs/:id" element={<JobDetails />} />
             <Route path="/student/applications" element={<MyApplications />} />
             <Route path="/student/interviews" element={<MyInterviews />} />
             <Route path="/student/settings" element={<StudentSettings />} />

@@ -1,6 +1,7 @@
 const StudentProfile = require('../models/StudentProfile');
 const Application = require('../models/Application');
 const User = require('../models/User');
+const Job = require('../models/Job');
 
 // @desc    Get student dashboard stats & recent activities
 // @route   GET /api/student/dashboard
@@ -28,6 +29,12 @@ exports.getDashboard = async (req, res) => {
         const profile = await StudentProfile.findOne({ user: studentId });
         const profileComplete = !!(profile && profile.cgpa && profile.resumeUrl);
 
+        // 4. Get Recommended Jobs (For now just getting 4 latest open jobs)
+        // In future, we can filter by skills matching
+        const recommendedJobs = await Job.find({ status: 'Open' })
+            .sort({ createdAt: -1 })
+            .limit(4);
+
         res.json({
             user,
             stats: {
@@ -37,7 +44,8 @@ exports.getDashboard = async (req, res) => {
             },
             recentApplications,
             profileComplete,
-            profile // sending profile summary if needed
+            profile,
+            recommendedJobs
         });
     } catch (err) {
         console.error(err.message);
@@ -52,7 +60,13 @@ exports.getProfile = async (req, res) => {
     try {
         const profile = await StudentProfile.findOne({ user: req.user.userId }).populate('user', 'name email role');
         if (!profile) {
-            return res.status(404).json({ msg: 'Profile not found' });
+            // If profile doesn't exist, return basic user info so the frontend can still display name/email
+            const user = await User.findById(req.user.userId).select('name email role');
+            if (!user) {
+                return res.status(404).json({ msg: 'User not found' });
+            }
+            // Return a structure that allows the frontend to access user safely
+            return res.json({ user });
         }
         res.json(profile);
     } catch (err) {
@@ -66,18 +80,49 @@ exports.getProfile = async (req, res) => {
 // @access  Private (Student only)
 exports.updateProfile = async (req, res) => {
     const {
+        // User Details
+        firstName, lastName, email,
         // Personal Details
         dateOfBirth, gender, permanentAddress, phone, location, profilePictureUrl, isOpenToWork,
         // Academic Info
         universityRollNo, currentSemester, backlogs, attendance,
         cgpa, graduationYear, department, major,
         // Professional & Skills
-        resumeUrl, skills, bio, portfolioUrl, linkedinUrl
+        resumeUrl, skills, bio, portfolioUrl, linkedinUrl,
+        // Settings
+        notificationPreferences
     } = req.body;
 
     // Build profile object
     const profileFields = {};
     profileFields.user = req.user.userId;
+
+    // Notification Preferences
+    if (notificationPreferences) {
+        profileFields.notificationPreferences = notificationPreferences;
+    }
+
+    // Update User Model (Name & Email)
+    if (firstName || lastName || email) {
+        try {
+            const user = await User.findById(req.user.userId);
+            if (user) {
+                if (firstName || lastName) {
+                    // If only one is provided, use existing to avoid "undefined"
+                    const currentParts = user.name.split(' ');
+                    const first = firstName || currentParts[0] || '';
+                    const last = lastName || currentParts.slice(1).join(' ') || '';
+                    user.name = `${first} ${last}`.trim();
+                }
+                if (email) user.email = email;
+                await user.save();
+            }
+        } catch (err) {
+            console.error("Error updating user details:", err.message);
+            // Continue even if user update fails? Probably safest to log and continue, or fail?
+            // Let's fail if critical user info fails, but usually validation catches it.
+        }
+    }
 
     // Personal Details
     if (dateOfBirth) profileFields.dateOfBirth = dateOfBirth;
@@ -100,9 +145,13 @@ exports.updateProfile = async (req, res) => {
 
     // Professional & Skills
     if (resumeUrl) profileFields.resumeUrl = resumeUrl;
-    if (skills) {
+    if (typeof skills !== 'undefined') {
         // splits comma-separated strings if sent as string, otherwise assumes array
-        profileFields.skills = Array.isArray(skills) ? skills : skills.split(',').map(skill => skill.trim());
+        if (Array.isArray(skills)) {
+            profileFields.skills = skills;
+        } else {
+            profileFields.skills = skills.toString().trim().length > 0 ? skills.toString().split(',').map(skill => skill.trim()) : [];
+        }
     }
     if (bio) profileFields.bio = bio;
     if (portfolioUrl) profileFields.portfolioUrl = portfolioUrl;
@@ -118,13 +167,90 @@ exports.updateProfile = async (req, res) => {
                 { $set: profileFields },
                 { new: true, runValidators: true }
             );
-            return res.json(profile);
+        } else {
+            // Create
+            profile = new StudentProfile(profileFields);
+            await profile.save();
         }
 
-        // Create
-        profile = new StudentProfile(profileFields);
+        // Return profile WITH populated user data so frontend gets updated name/email
+        const fullProfile = await StudentProfile.findById(profile._id).populate('user', 'name email role');
+        res.json(fullProfile);
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Upload student resume
+// @route   POST /api/student/resume
+// @access  Private (Student only)
+exports.uploadResume = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ msg: 'No file uploaded' });
+        }
+
+        // Construct URL
+        const resumeUrl = `${req.protocol}://${req.get('host')}/uploads/resumes/${req.file.filename}`;
+
+        // Find and update profile
+        let profile = await StudentProfile.findOne({ user: req.user.userId });
+
+        if (profile) {
+            profile.resumeUrl = resumeUrl;
+            await profile.save();
+            return res.json({ resumeUrl, msg: 'Resume uploaded successfully' });
+        } else {
+            // If profile doesn't exist, create it with just the resume
+            const newProfile = new StudentProfile({
+                user: req.user.userId,
+                resumeUrl: resumeUrl
+            });
+            await newProfile.save();
+            return res.json({ resumeUrl, msg: 'Resume uploaded successfully', profile: newProfile });
+        }
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Upload student profile image or cover image
+// @route   POST /api/student/upload-image
+// @access  Private (Student only)
+exports.uploadStudentImage = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ msg: 'No file uploaded' });
+        }
+
+        const type = req.body.type; // 'profile' or 'cover'
+        if (!type || !['profile', 'cover'].includes(type)) {
+            return res.status(400).json({ msg: 'Invalid image type' });
+        }
+
+        // Construct URL
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
+
+        // Find and update profile
+        let profile = await StudentProfile.findOne({ user: req.user.userId });
+
+        if (!profile) {
+            profile = new StudentProfile({ user: req.user.userId });
+        }
+
+        if (type === 'profile') {
+            profile.profilePictureUrl = imageUrl;
+        } else if (type === 'cover') {
+            profile.coverImageUrl = imageUrl;
+        }
+
         await profile.save();
-        res.json(profile);
+        return res.json({ imageUrl, msg: 'Image uploaded successfully', profile });
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

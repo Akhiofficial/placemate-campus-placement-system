@@ -31,6 +31,10 @@ const StudentProfileSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    coverImageUrl: {
+        type: String,
+        trim: true
+    },
     isOpenToWork: {
         type: Boolean,
         default: true

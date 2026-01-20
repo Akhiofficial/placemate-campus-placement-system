@@ -1,10 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
 import StudentSidebar from "../ui/StudentSidebar";
+import api from "../../api/axios";
 
 const StudentLayout = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [studentData, setStudentData] = useState(null);
+
+    const fetchProfile = async () => {
+        try {
+            const { data } = await api.get('/student/profile');
+            setStudentData(data);
+        } catch (error) {
+            console.error("Failed to load profile", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const user = studentData?.user;
+    const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'A';
+    const profilePic = studentData?.profilePictureUrl;
 
     return (
         <div className="flex min-h-screen bg-background transition-colors duration-300">
@@ -12,6 +31,7 @@ const StudentLayout = () => {
             <StudentSidebar
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
+                studentData={studentData}
             />
 
             {/* Main Content Area */}
@@ -29,14 +49,18 @@ const StudentLayout = () => {
                         <span className="font-bold text-blue-600 text-lg">PlaceMate</span>
                     </div>
 
-                    {/* You could add a small profile or notification icon here for mobile */}
-                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm">
-                        A
+                    {/* Mobile Profile Icon */}
+                    <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm overflow-hidden">
+                        {profilePic ? (
+                            <img src={profilePic} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                            initial
+                        )}
                     </div>
                 </header>
 
                 {/* Page Content */}
-                <Outlet />
+                <Outlet context={{ studentData, refreshUser: fetchProfile }} />
             </div>
         </div>
     );

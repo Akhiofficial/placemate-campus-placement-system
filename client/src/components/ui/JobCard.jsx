@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 const JobCard = ({ job, index }) => {
+    const navigate = useNavigate();
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -11,15 +14,19 @@ const JobCard = ({ job, index }) => {
         >
             {/* Logo */}
             <div
-                className={`w-10 h-10 ${job.logoBg} text-white rounded-lg flex items-center justify-center font-semibold mb-4`}
+                className={`w-10 h-10 ${job.logoBg || 'bg-blue-600'} text-white rounded-lg flex items-center justify-center font-semibold mb-4 overflow-hidden`}
             >
-                {job.logo}
+                {job.companyLogo ? (
+                    <img src={job.companyLogo} alt={job.company} className="w-full h-full object-cover" />
+                ) : (
+                    job.logo || job.company?.charAt(0).toUpperCase() || 'C'
+                )}
             </div>
 
             {/* Content */}
             <div className="flex-1">
                 <h3 className="font-semibold text-foreground group-hover:text-blue-600 transition">
-                    {job.role}
+                    {job.role || job.title}
                 </h3>
                 <p className="text-sm text-foreground-muted mt-1">
                     {job.company} · {job.location}
@@ -27,7 +34,10 @@ const JobCard = ({ job, index }) => {
             </div>
 
             {/* Action */}
-            <button className="mt-4 text-sm font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition self-start cursor-pointer">
+            <button
+                onClick={() => navigate(`/student/jobs/${job._id}`)}
+                className="mt-4 text-sm font-medium text-blue-600 opacity-0 group-hover:opacity-100 transition self-start cursor-pointer"
+            >
                 View details →
             </button>
         </motion.div>

@@ -1,9 +1,11 @@
 import { Bell, Moon, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
+import { useNavigate } from "react-router-dom";
 
-const DashboardHeader = ({ user }) => {
+const DashboardHeader = ({ user, showBrowseJobs = true }) => {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
 
   return (
     <motion.div
@@ -46,13 +48,16 @@ const DashboardHeader = ({ user }) => {
         </motion.button>
 
         {/* Primary Action */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow-sm cursor-pointer"
-        >
-          Browse Jobs
-        </motion.button>
+        {showBrowseJobs && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigate('/student/jobs')}
+            className="bg-blue-600 text-white px-5 py-2.5 rounded-lg font-medium hover:bg-blue-700 transition shadow-sm cursor-pointer"
+          >
+            Browse Jobs
+          </motion.button>
+        )}
       </div>
     </motion.div>
   );

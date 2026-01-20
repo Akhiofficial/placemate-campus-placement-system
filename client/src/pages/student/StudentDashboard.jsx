@@ -69,7 +69,7 @@ const StudentDashboard = () => {
         </div>
 
         {/* Recommended Jobs */}
-        <RecommendedJobs />
+        <RecommendedJobs jobs={dashboardData?.recommendedJobs} />
       </div>
     </motion.main>
   );

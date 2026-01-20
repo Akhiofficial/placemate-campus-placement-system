@@ -61,7 +61,7 @@ const RecentApplications = ({ applications = [] }) => {
                   className="hover:bg-background-muted transition"
                 >
                   <td className="py-4 font-medium text-foreground">
-                    {app.job?.company?.name || "Unknown Company"}
+                    {app.job?.company || "Unknown Company"}
                   </td>
                   <td className="text-foreground-muted">
                     {app.job?.title || "Unknown Role"}
