@@ -2,6 +2,8 @@
 const User = require('../models/User');
 const AdminRequest = require('../models/AdminRequest');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
 
 // @desc    Register new user
 // @route   POST /api/auth/signup
@@ -89,11 +91,18 @@ exports.requestAdminAccess = async (req, res) => {
 // @route   POST /api/auth/login
 // @access  Public
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
     try {
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(400).json({ msg: 'Invalid credentials' });
+        }
+
+        // Verify role if provided
+        if (role && user.role !== role) {
+            return res.status(403).json({
+                msg: `Access denied. You are registered as a ${user.role}, not a ${role}.`
+            });
         }
 
         // Check if admin is approved
@@ -155,6 +164,110 @@ exports.changePassword = async (req, res) => {
         res.json({ msg: 'Password changed successfully' });
     } catch (err) {
         console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Forgot Password
+// @route   POST /api/auth/forgot-password
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found with this email' });
+        }
+
+        // Generate Reset Token
+        const resetToken = crypto.randomBytes(20).toString('hex');
+
+        // Hash token and set to resetPasswordToken field
+        user.resetPasswordToken = crypto
+            .createHash('sha256')
+            .update(resetToken)
+            .digest('hex');
+
+        // Set expire (10 minutes)
+        user.resetPasswordExpire = Date.now() + 10 * 60 * 1000;
+
+        await user.save();
+
+        // Create reset url
+        // In production, this should point to the frontend url
+        const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+
+        const message = `
+            You are receiving this email because you (or someone else) has requested the reset of a password.
+            Please make a PUT request to: \n\n ${resetUrl} \n\n
+            (For this demo, since we are building the frontend, you'll need to use the token in the Reset Password page).
+            
+            Your Reset Token is: ${resetToken}
+        `;
+
+        try {
+            await sendEmail({
+                email: user.email,
+                subject: 'Password Reset Token',
+                message
+            });
+
+            res.status(200).json({ success: true, data: 'Email sent' });
+        } catch (err) {
+            console.error(err);
+            user.resetPasswordToken = undefined;
+            user.resetPasswordExpire = undefined;
+
+            await user.save();
+
+            return res.status(500).json({ msg: 'Email could not be sent' });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Reset Password
+// @route   PUT /api/auth/reset-password/:resettoken
+// @access  Public
+exports.resetPassword = async (req, res) => {
+    const { password } = req.body;
+
+    // Get hashed token
+    const resetPasswordToken = crypto
+        .createHash('sha256')
+        .update(req.params.resettoken)
+        .digest('hex');
+
+    try {
+        const user = await User.findOne({
+            resetPasswordToken,
+            resetPasswordExpire: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ msg: 'Invalid token' });
+        }
+
+        // Set new password
+        user.password = password;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpire = undefined;
+
+        await user.save();
+
+        // Log user in directly? Or ask them to login?
+        // Let's ask them to login
+        res.json({
+            success: true,
+            data: 'Password updated success'
+        });
+
+    } catch (err) {
+        console.error(err);
         res.status(500).send('Server error');
     }
 };

@@ -7,7 +7,13 @@ const StatsCards = () => {
   const [stats, setStats] = useState(null);
 
   useEffect(() => {
-    getDashboardStats().then((data) => setStats(data));
+    getDashboardStats()
+      .then((data) => setStats(data))
+      .catch((err) => {
+        console.error("Failed to load stats:", err);
+        // Optionally set empty stats or error state here
+        // For now, we leave stats as null so it shows loading or handle it otherwise
+      });
   }, []);
 
   if (!stats) {

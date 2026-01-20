@@ -3,7 +3,7 @@ import React from 'react';
 const RoleSelector = ({ selectedRole, onSelect }) => {
     const roles = [
         { id: 'student', label: 'Student' },
-        { id: 'recruiter', label: 'Recruiter' },
+        { id: 'company', label: 'Company' },
         { id: 'admin', label: 'Admin' }
     ];
 

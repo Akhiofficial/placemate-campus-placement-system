@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Login from './pages/auth/Login'
 import Signup from './pages/auth/Signup'
+import ResetPassword from './pages/auth/ResetPassword'
 import StudentDashboard from './pages/student/StudentDashboard'
 import StudentProfile from './pages/student/StudentProfile'
 import JobListings from './pages/student/JobListings'
@@ -36,6 +37,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           <Route element={<StudentLayout />}>
             <Route path="/student/dashboard" element={<StudentDashboard />} />

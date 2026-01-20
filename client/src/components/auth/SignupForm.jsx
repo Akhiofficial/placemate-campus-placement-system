@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../api/axios';
 import Input from '../ui/Input';
 import Button from '../ui/Button';
 import RoleSelector from './RoleSelector';
@@ -17,11 +17,13 @@ const SignupForm = () => {
         email: '',
         password: '',
         confirmPassword: '',
+        adminKey: '',
         agreeToTerms: false
     });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
     const [serverError, setServerError] = useState('');
+    const [adminSuccess, setAdminSuccess] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -37,6 +39,9 @@ const SignupForm = () => {
             setServerError("You must agree to the Terms of Service");
             return;
         }
+        if (role === 'admin' && !formData.adminKey) {
+            newErrors.adminKey = "Admin secret key is required";
+        }
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
             return;
@@ -45,27 +50,36 @@ const SignupForm = () => {
         setLoading(true);
 
         try {
-            // In a real app, base URL would be env var
-            const response = await axios.post('http://localhost:5000/api/auth/signup', {
-                name: formData.fullName,
-                email: formData.email,
-                password: formData.password,
-                role: role
-            });
-
-            const { token, user } = response.data;
-
-            // Store auth data
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
-
-            // Redirect based on role
-            if (user.role === 'student') {
-                navigate('/student/dashboard');
-            } else if (user.role === 'recruiter') {
-                navigate('/recruiter/dashboard');
+            if (role === 'admin') {
+                await api.post('/auth/request-admin', {
+                    name: formData.fullName,
+                    email: formData.email,
+                    password: formData.password,
+                    adminKey: formData.adminKey
+                });
+                setAdminSuccess(true);
             } else {
-                navigate('/student/dashboard');
+                const response = await api.post('/auth/signup', {
+                    name: formData.fullName,
+                    email: formData.email,
+                    password: formData.password,
+                    role: role
+                });
+
+                const { token, user } = response.data;
+
+                // Store auth data
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(user));
+
+                // Redirect based on role
+                if (user.role === 'student') {
+                    navigate('/student/dashboard');
+                } else if (user.role === 'company') {
+                    navigate('/company/dashboard');
+                } else {
+                    navigate('/student/dashboard');
+                }
             }
 
         } catch (err) {
@@ -87,6 +101,23 @@ const SignupForm = () => {
             setErrors(prev => ({ ...prev, [name]: '' }));
         }
     };
+
+    if (adminSuccess) {
+        return (
+            <div className="w-full max-w-md text-center">
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h2 className="text-2xl font-bold text-green-700 mb-2">Request Submitted</h2>
+                    <p className="text-green-600">
+                        Your request for admin access has been submitted successfully to the Super Admin.
+                        You will be able to log in once your account is approved.
+                    </p>
+                </div>
+                <Button variant="outline" onClick={() => navigate('/')}>
+                    Back to Login
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full max-w-md">
@@ -129,6 +160,20 @@ const SignupForm = () => {
                     error={errors.email}
                     required
                 />
+
+                {role === 'admin' && (
+                    <Input
+                        label="Admin Secret Key"
+                        name="adminKey"
+                        type="password"
+                        placeholder="Enter admin secret key"
+                        value={formData.adminKey}
+                        onChange={handleChange}
+                        icon={Lock}
+                        error={errors.adminKey}
+                        required
+                    />
+                )}
 
                 <div className="space-y-4">
                     <div className="relative">
@@ -189,7 +234,7 @@ const SignupForm = () => {
                 </div>
 
                 <Button variant="primary" type="submit" className="w-full mt-2" disabled={loading}>
-                    {loading ? 'Creating Account...' : 'Create Account'}
+                    {loading ? (role === 'admin' ? 'Requesting Access...' : 'Creating Account...') : (role === 'admin' ? 'Request Admin Access' : 'Create Account')}
                 </Button>
             </form>
 
