@@ -5,9 +5,21 @@ const statusStyles = {
   Interview: "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
   Offer: "bg-green-100 text-green-600 dark:bg-green-500/10 dark:text-green-400",
   Rejected: "bg-red-100 text-red-600 dark:bg-red-500/10 dark:text-red-400",
+  Applied: "bg-gray-100 text-gray-600 dark:bg-gray-500/10 dark:text-gray-400",
+  Pending: "bg-yellow-100 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400",
+  Shortlisted: "bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400",
 };
 
-const RecentApplications = () => {
+const RecentApplications = ({ applications = [] }) => {
+  // Helper to format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="bg-card rounded-xl border border-border shadow-sm p-6 transition-colors">
       {/* Header */}
@@ -33,83 +45,41 @@ const RecentApplications = () => {
           </thead>
 
           <tbody className="divide-y divide-border">
-            {/* Row 1 */}
-            <motion.tr
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="hover:bg-background-muted transition"
-            >
-              <td className="py-4 font-medium text-foreground">
-                TechCorp Inc.
-              </td>
-              <td className="text-foreground-muted">
-                Frontend Developer
-              </td>
-              <td className="text-foreground-muted">
-                Oct 24, 2023
-              </td>
-              <td>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles["In Review"]
-                    }`}
+            {applications.length === 0 ? (
+              <tr>
+                <td colSpan="4" className="py-4 text-center text-foreground-muted">
+                  No applications yet.
+                </td>
+              </tr>
+            ) : (
+              applications.map((app, index) => (
+                <motion.tr
+                  key={app._id || index}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, duration: 0.3 }}
+                  className="hover:bg-background-muted transition"
                 >
-                  In Review
-                </span>
-              </td>
-            </motion.tr>
-
-            {/* Row 2 */}
-            <motion.tr
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05, duration: 0.3 }}
-              className="hover:bg-background-muted transition"
-            >
-              <td className="py-4 font-medium text-foreground">
-                Cloudify
-              </td>
-              <td className="text-foreground-muted">
-                Backend Engineer
-              </td>
-              <td className="text-foreground-muted">
-                Oct 18, 2023
-              </td>
-              <td>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles.Interview
-                    }`}
-                >
-                  Interview
-                </span>
-              </td>
-            </motion.tr>
-
-            {/* Row 3 */}
-            <motion.tr
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1, duration: 0.3 }}
-              className="hover:bg-background-muted transition"
-            >
-              <td className="py-4 font-medium text-foreground">
-                DataWorks
-              </td>
-              <td className="text-foreground-muted">
-                Data Analyst
-              </td>
-              <td className="text-foreground-muted">
-                Oct 12, 2023
-              </td>
-              <td>
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles.Offer
-                    }`}
-                >
-                  Offer
-                </span>
-              </td>
-            </motion.tr>
+                  <td className="py-4 font-medium text-foreground">
+                    {app.job?.company?.name || "Unknown Company"}
+                  </td>
+                  <td className="text-foreground-muted">
+                    {app.job?.title || "Unknown Role"}
+                  </td>
+                  <td className="text-foreground-muted">
+                    {formatDate(app.createdAt)}
+                  </td>
+                  <td>
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles[app.status] || "bg-gray-100 text-gray-600"
+                        }`}
+                    >
+                      {app.status}
+                    </span>
+                  </td>
+                </motion.tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

@@ -1,7 +1,7 @@
 import { FileText } from "lucide-react";
 import { motion } from "framer-motion";
 
-const AcademicProfile = () => {
+const AcademicProfile = ({ profile }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -17,20 +17,20 @@ const AcademicProfile = () => {
         <div className="rounded-xl bg-background-muted p-4 border border-border">
           <p className="text-xs text-foreground-muted">CGPA</p>
           <p className="text-2xl font-bold text-foreground mt-1">
-            3.8 <span className="text-sm text-foreground-muted">/ 4.0</span>
+            {profile?.cgpa || 'N/A'} <span className="text-sm text-foreground-muted">/ 10</span>
           </p>
         </div>
 
         <div className="rounded-xl bg-background-muted p-4 border border-border">
           <p className="text-xs text-foreground-muted">Year</p>
-          <p className="text-2xl font-bold text-foreground mt-1">2024</p>
+          <p className="text-2xl font-bold text-foreground mt-1">{profile?.graduationYear || 'N/A'}</p>
         </div>
       </div>
 
       <div className="mb-6">
         <p className="text-xs text-foreground-muted mb-1">Major</p>
         <p className="text-sm font-medium text-foreground">
-          Computer Science & Engineering
+          {profile?.major || 'No Major Added'}
         </p>
       </div>
 
@@ -40,11 +40,11 @@ const AcademicProfile = () => {
         </div>
 
         <p className="text-sm text-foreground font-medium group-hover:text-blue-600 transition">
-          Alex_Resume_v4.pdf
+          {profile?.resumeUrl ? "Resume Uploaded" : "No Resume Uploaded"}
         </p>
 
         <button className="mt-3 text-sm font-medium text-blue-400 hover:text-blue-500 transition">
-          Preview Resume
+          {profile?.resumeUrl ? "Update Resume" : "Upload Resume"}
         </button>
       </div>
     </motion.div>

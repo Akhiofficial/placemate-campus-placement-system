@@ -1,11 +1,11 @@
 import api from './axios';
 
-export const getDashboardStats = async () => {
+export const getStudentDashboard = async () => {
   try {
     const response = await api.get('/student/dashboard');
-    return response.data.stats;
+    return response.data;
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error);
+    console.error('Error fetching dashboard data:', error);
     throw error;
   }
 };

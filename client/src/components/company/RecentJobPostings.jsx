@@ -1,56 +1,25 @@
 import React from 'react';
 
-const jobs = [
-    {
-        id: 1,
-        title: 'Software Engineer I',
-        type: 'Full-time • Remote',
-        date: 'Oct 24, 2023',
-        status: 'Active',
-        applicants: 45,
-        initials: 'SE',
-        iconBg: 'bg-blue-100 dark:bg-blue-500/20',
-        iconText: 'text-blue-600 dark:text-blue-400',
-        applicantsImages: [
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob"
-        ]
-    },
-    {
-        id: 2,
-        title: 'Product Design Intern',
-        type: 'Internship • On-site',
-        date: 'Oct 20, 2023',
-        status: 'Active',
-        applicants: 20,
-        initials: 'PD',
-        iconBg: 'bg-pink-100 dark:bg-pink-500/20',
-        iconText: 'text-pink-600 dark:text-pink-400',
-        applicantsImages: [
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=John",
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane"
-        ]
-    },
-    {
-        id: 3,
-        title: 'Data Analyst',
-        type: 'Full-time • Hybrid',
-        date: 'Sep 15, 2023',
-        status: 'Closed',
-        applicants: 102,
-        initials: 'DA',
-        iconBg: 'bg-orange-100 dark:bg-orange-500/20',
-        iconText: 'text-orange-600 dark:text-orange-400',
-        applicantsImages: [
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=Maria",
-            "https://api.dicebear.com/7.x/avataaars/svg?seed=Steve"
-        ]
-    },
-];
+const RecentJobPostings = ({ jobs = [] }) => {
 
-const RecentJobPostings = () => {
+    // Helper to format date
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
+    // Helper to get initials
+    const getInitials = (title) => {
+        return title
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase()
+            .substring(0, 2);
+    };
     return (
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
             <div className="p-6 border-b border-border flex justify-between items-center bg-card">
@@ -69,46 +38,49 @@ const RecentJobPostings = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
-                        {jobs.map((job) => (
-                            <tr key={job.id} className="hover:bg-background-muted transition-colors">
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${job.iconBg} ${job.iconText}`}>
-                                            {job.initials}
-                                        </div>
-                                        <div>
-                                            <div className="text-foreground font-semibold">{job.title}</div>
-                                            <div className="text-xs text-foreground-muted">{job.type}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-foreground-muted font-medium">{job.date}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${job.status === 'Active'
-                                        ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/20 dark:text-green-400 dark:border-green-800'
-                                        : 'bg-slate-800 text-white border-slate-700 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600'
-                                        }`}>
-                                        <span className={`w-1.5 h-1.5 rounded-full ${job.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                                        {job.status}
-                                    </span>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-2">
-                                        <div className="flex -space-x-2">
-                                            {job.applicantsImages.map((img, i) => (
-                                                <img key={i} src={img} alt="Applicant" className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-800 object-cover shrink-0" />
-                                            ))}
-                                        </div>
-                                        <span className="text-foreground-muted font-medium text-xs">
-                                            {job.applicants} Applicants
-                                        </span>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-4 text-right">
-                                    <button className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 transition-colors">View Details</button>
+                        {jobs.length === 0 ? (
+                            <tr>
+                                <td colSpan="5" className="px-6 py-8 text-center text-foreground-muted">
+                                    No  jobs posted yet.
                                 </td>
                             </tr>
-                        ))}
+                        ) : (
+                            jobs.map((job) => (
+                                <tr key={job._id} className="hover:bg-background-muted transition-colors">
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400`}>
+                                                {getInitials(job.title)}
+                                            </div>
+                                            <div>
+                                                <div className="text-foreground font-semibold">{job.title}</div>
+                                                <div className="text-xs text-foreground-muted">{job.type} • {job.location}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-foreground-muted font-medium">{formatDate(job.createdAt)}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${job.status === 'Open'
+                                            ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-500/20 dark:text-green-400 dark:border-green-800'
+                                            : 'bg-slate-800 text-white border-slate-700 dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600'
+                                            }`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${job.status === 'Open' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
+                                            {job.status === 'Open' ? 'Active' : job.status}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-foreground-muted font-medium text-xs">
+                                                {job.applicantsCount || 0} Applicants
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-right">
+                                        <button className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 transition-colors">View Details</button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>

@@ -1,21 +1,15 @@
-import { useEffect, useState } from "react";
-import { ArrowUpRight, CalendarCheck, BadgeCheck } from "lucide-react";
+import { Send, Calendar, Briefcase, TrendingUp, ArrowUpRight, CalendarCheck, BadgeCheck } from "lucide-react";
 import { motion } from "framer-motion";
-import { getDashboardStats } from "../../api/dashboardApi";
 
-const StatsCards = () => {
-  const [stats, setStats] = useState(null);
+const StatsCards = ({ stats }) => {
+  // Default values in case stats are not yet loaded or are null/undefined
+  const {
+    totalApplications = 0,
+    interviewsScheduled = 0,
+    offersReceived = 0,
+  } = stats || {};
 
-  useEffect(() => {
-    getDashboardStats()
-      .then((data) => setStats(data))
-      .catch((err) => {
-        console.error("Failed to load stats:", err);
-        // Optionally set empty stats or error state here
-        // For now, we leave stats as null so it shows loading or handle it otherwise
-      });
-  }, []);
-
+  // If stats are not provided or are null, we can show a loading message or empty state
   if (!stats) {
     return (
       <p className="text-foreground-muted mb-8 text-sm">
@@ -27,7 +21,7 @@ const StatsCards = () => {
   const cards = [
     {
       title: "Total Applications",
-      value: stats.totalApplications,
+      value: totalApplications,
       icon: ArrowUpRight,
       bg: "bg-blue-50 dark:bg-blue-500/10",
       iconBg: "bg-blue-100 dark:bg-blue-500/20",
@@ -36,7 +30,7 @@ const StatsCards = () => {
     },
     {
       title: "Interviews Scheduled",
-      value: stats.interviewsScheduled,
+      value: interviewsScheduled,
       icon: CalendarCheck,
       bg: "bg-purple-50 dark:bg-purple-500/10",
       iconBg: "bg-purple-100 dark:bg-purple-500/20",
@@ -45,7 +39,7 @@ const StatsCards = () => {
     },
     {
       title: "Offers Received",
-      value: stats.offersReceived,
+      value: offersReceived,
       icon: BadgeCheck,
       bg: "bg-green-50 dark:bg-green-500/10",
       iconBg: "bg-green-100 dark:bg-green-500/20",

@@ -17,7 +17,7 @@ const Input = ({ label, id, type = 'text', placeholder, icon: Icon, error, ...pr
                 <input
                     id={id}
                     type={type}
-                    className={`w-full rounded-lg border bg-background-input px-3 py-2 text-sm outline-none transition-all placeholder:text-foreground-muted
+                    className={`w-full rounded-lg border bg-background-input text-foreground px-3 py-2 text-sm outline-none transition-all placeholder:text-foreground-muted
             ${Icon ? 'pl-10' : ''}
             ${error
                             ? 'border-error ring-2 ring-error/20 focus:border-error focus:ring-error/20'

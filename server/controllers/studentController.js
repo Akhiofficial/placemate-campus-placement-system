@@ -9,6 +9,9 @@ exports.getDashboard = async (req, res) => {
     try {
         const studentId = req.user.userId; // user id from token
 
+        // 0. Get User Details (Name, Email)
+        const user = await User.findById(studentId).select('name email role');
+
         // 1. Get stats
         const totalApplications = await Application.countDocuments({ student: studentId });
         const interviewsScheduled = await Application.countDocuments({ student: studentId, status: 'Interview' });
@@ -26,6 +29,7 @@ exports.getDashboard = async (req, res) => {
         const profileComplete = !!(profile && profile.cgpa && profile.resumeUrl);
 
         res.json({
+            user,
             stats: {
                 totalApplications,
                 interviewsScheduled,

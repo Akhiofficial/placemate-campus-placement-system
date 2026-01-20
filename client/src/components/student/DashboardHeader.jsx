@@ -2,7 +2,7 @@ import { Bell, Moon, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
 
-const DashboardHeader = () => {
+const DashboardHeader = ({ user }) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -16,7 +16,7 @@ const DashboardHeader = () => {
       <div>
         <h1 className="text-3xl font-bold text-foreground leading-tight">
           Welcome back,{" "}
-          <span className="text-blue-600">Student</span> 👋
+          <span className="text-blue-600">{user?.name?.split(' ')[0] || 'Student'}</span> 👋
         </h1>
         <p className="text-foreground-muted mt-1">
           Here’s what’s happening with your job applications today.
