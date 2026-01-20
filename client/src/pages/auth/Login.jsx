@@ -1,6 +1,7 @@
 import React from 'react';
 import LoginForm from '../../components/auth/LoginForm';
 import { GraduationCap } from 'lucide-react';
+import ThemeToggle from '../../components/ui/ThemeToggle';
 
 const Login = () => {
     return (
@@ -64,7 +65,10 @@ const Login = () => {
             </div>
 
             {/* Right Side - Form Section */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-24 bg-background">
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 lg:p-24 bg-background relative">
+                <div className="absolute top-6 right-6">
+                    <ThemeToggle />
+                </div>
                 <LoginForm />
             </div>
         </div>
