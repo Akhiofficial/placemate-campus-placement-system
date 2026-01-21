@@ -13,6 +13,7 @@ import StudentSettings from './pages/student/StudentSettings'
 import StudentLayout from './components/layout/StudentLayout'
 import CompanyLayout from './components/layout/CompanyLayout'
 import CompanyDashboard from './pages/company/CompanyDashboard'
+import CompanyNotifications from './pages/company/CompanyNotifications'
 import CompanyJobs from './pages/company/CompanyJobs'
 import CreateJob from './pages/company/CreateJob'
 import CompanyApplicants from './pages/company/CompanyApplicants'
@@ -60,6 +61,7 @@ const App = () => {
             <Route path="/company/interviews/schedule" element={<ScheduleInterview />} />
             <Route path="/company/interviews/edit/:id" element={<ScheduleInterview />} />
             <Route path="/company/profile" element={<CompanyProfile />} />
+            <Route path="/company/notifications" element={<CompanyNotifications />} />
             <Route path="/company/settings" element={<CompanySettings />} />
           </Route>
 

@@ -145,7 +145,7 @@ exports.updateProfile = async (req, res) => {
 
     // Professional & Skills
     if (resumeUrl) profileFields.resumeUrl = resumeUrl;
-    if (typeof skills !== 'undefined') {
+    if (typeof skills !== 'undefined' && skills !== null) {
         // splits comma-separated strings if sent as string, otherwise assumes array
         if (Array.isArray(skills)) {
             profileFields.skills = skills;
@@ -178,8 +178,9 @@ exports.updateProfile = async (req, res) => {
         res.json(fullProfile);
 
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server error');
+        console.error("Update Profile Error:", err);
+        // Expose the actual error message to the frontend
+        res.status(500).json({ msg: err.message });
     }
 };
 

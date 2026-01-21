@@ -1,15 +1,73 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import InterviewStats from '../../components/company/interviews/InterviewStats';
 import InterviewFilters from '../../components/company/interviews/InterviewFilters';
 import InterviewTable from '../../components/company/interviews/InterviewTable';
+import { getInterviewStats, getCompanyInterviews } from '../../api/companyApi';
 
 const CompanyInterviews = () => {
-    const [activeTab, setActiveTab] = React.useState('Upcoming');
-    const [searchQuery, setSearchQuery] = React.useState('');
-    const [roleFilter, setRoleFilter] = React.useState('All Roles');
-    const [statusFilter, setStatusFilter] = React.useState('All Statuses');
+    const [activeTab, setActiveTab] = useState('Upcoming');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [roleFilter, setRoleFilter] = useState('All Roles');
+    const [statusFilter, setStatusFilter] = useState('All Statuses');
+
+    const [stats, setStats] = useState(null);
+    const [interviews, setInterviews] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    // Debounce search
+    const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchQuery), 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const filters = {};
+
+            if (activeTab === 'Upcoming') filters.type = 'Upcoming';
+            else if (activeTab === 'Past Interviews') filters.type = 'Past';
+            if (debouncedSearch) filters.search = debouncedSearch;
+            if (roleFilter !== 'All Roles') filters.role = roleFilter;
+            if (statusFilter !== 'All Statuses') filters.status = statusFilter;
+
+            const [statsData, interviewsData] = await Promise.all([
+                getInterviewStats(),
+                getCompanyInterviews(filters)
+            ]);
+
+            setStats(statsData);
+
+            // Map backend data to UI format
+            const formattedInterviews = (interviewsData.interviews || []).map(inv => ({
+                id: inv._id,
+                name: inv.candidate.name,
+                email: inv.candidate.email,
+                image: inv.candidate.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(inv.candidate.name)}&background=random`,
+                role: inv.role,
+                dept: inv.department || 'Engineering', // Fallback or add to map
+                date: new Date(inv.date).toLocaleDateString(),
+                time: inv.time,
+                platform: inv.platform,
+                meetingLink: inv.meetingLink,
+                status: inv.status
+            }));
+
+            setInterviews(formattedInterviews);
+
+        } catch (error) {
+            console.error("Error fetching interviews:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [debouncedSearch, activeTab, roleFilter, statusFilter]);
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -35,7 +93,7 @@ const CompanyInterviews = () => {
             </div>
 
             {/* Stats */}
-            <InterviewStats />
+            <InterviewStats stats={stats} />
 
             {/* Filters & Tabs */}
             <InterviewFilters
@@ -51,10 +109,9 @@ const CompanyInterviews = () => {
 
             {/* Table */}
             <InterviewTable
-                activeTab={activeTab}
-                searchQuery={searchQuery}
-                roleFilter={roleFilter}
-                statusFilter={statusFilter}
+                interviews={interviews}
+                loading={loading}
+                onRefresh={fetchData}
             />
         </div>
     );

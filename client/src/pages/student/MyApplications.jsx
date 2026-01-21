@@ -3,6 +3,7 @@ import api from "../../api/axios";
 import { motion } from "framer-motion";
 import { Search, Filter, ChevronDown, Send, Star, Calendar, CheckCircle, ArrowRight, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import ApplicationDetailsModal from "../../components/student/ApplicationDetailsModal";
 
 
 
@@ -17,6 +18,7 @@ const MyApplications = () => {
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState({ search: "", status: "", sort: "newest" });
     const [pagination, setPagination] = useState({ page: 1, totalPages: 1, totalApps: 0 });
+    const [selectedApplication, setSelectedApplication] = useState(null);
 
     const fetchStats = async () => {
         try {
@@ -89,6 +91,8 @@ const MyApplications = () => {
     const getStatusColor = (status) => {
         switch (status) {
             case 'Applied': return "bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300 border-slate-200 dark:border-slate-600";
+            case 'Pending': return "bg-yellow-100 text-yellow-600 dark:bg-yellow-500/10 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/20";
+            case 'In Review':
             case 'Shortlisted': return "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
             case 'Interview': return "bg-purple-100 text-purple-600 dark:bg-purple-500/10 dark:text-purple-400 border-purple-200 dark:border-purple-500/20";
             case 'Offer':
@@ -200,8 +204,8 @@ const MyApplications = () => {
                             </button>
 
                             {showStatusDropdown && (
-                                <div className="absolute top-full mt-2 left-0 w-full min-w-[160px] bg-card border border-border rounded-lg shadow-lg z-10 py-1">
-                                    {["All Statuses", "Applied", "Shortlisted", "Interview", "Offer", "Rejected"].map((status) => (
+                                <div className="absolute top-full mt-2 left-0 w-full min-w-[160px] bg-card border border-border rounded-lg shadow-lg z-10 py-1 max-h-60 no-scrollbar overflow-y-auto">
+                                    {["All Statuses", "Applied", "Pending", "In Review", "Shortlisted", "Interview", "Offer", "Rejected"].map((status) => (
                                         <button
                                             key={status}
                                             onClick={() => handleStatusSelect(status)}
@@ -316,7 +320,10 @@ const MyApplications = () => {
 
                                     {/* Action */}
                                     <div className="col-span-3 md:col-span-2 text-right">
-                                        <button className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center justify-end gap-1 opacity-80 hover:opacity-100 transition">
+                                        <button
+                                            onClick={() => setSelectedApplication(app)}
+                                            className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center justify-end gap-1 opacity-80 hover:opacity-100 transition cursor-pointer"
+                                        >
                                             <span className="hidden sm:inline">View Details</span>
                                             <ArrowRight size={14} />
                                         </button>
@@ -353,6 +360,15 @@ const MyApplications = () => {
                 </div>
 
             </div>
+
+            {/* Application Details Modal */}
+            {selectedApplication && (
+                <ApplicationDetailsModal
+                    application={selectedApplication}
+                    onClose={() => setSelectedApplication(null)}
+                />
+            )}
+
         </main>
     );
 };

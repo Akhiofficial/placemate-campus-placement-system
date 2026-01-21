@@ -11,7 +11,11 @@ exports.getMyInterviews = async (req, res) => {
         let query = { student: studentId };
 
         if (status) {
-            query.status = status;
+            if (status === 'Upcoming') {
+                query.status = { $in: ['Scheduled', 'Rescheduled', 'Confirmed'] };
+            } else {
+                query.status = status;
+            }
         }
 
         if (search) {
@@ -24,7 +28,10 @@ exports.getMyInterviews = async (req, res) => {
         const interviews = await Interview.find(query).sort({ date: 1 }); // Ascending date (nearest first)
 
         // Count for stats
-        const upcomingCount = await Interview.countDocuments({ student: studentId, status: 'Scheduled' });
+        const upcomingCount = await Interview.countDocuments({
+            student: studentId,
+            status: { $in: ['Scheduled', 'Rescheduled', 'Confirmed'] }
+        });
 
         res.json({
             interviews,

@@ -1,6 +1,8 @@
-import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
 const RecentJobPostings = ({ jobs = [] }) => {
+    const navigate = useNavigate();
+
 
     // Helper to format date
     const formatDate = (dateString) => {
@@ -24,7 +26,7 @@ const RecentJobPostings = ({ jobs = [] }) => {
         <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
             <div className="p-6 border-b border-border flex justify-between items-center bg-card">
                 <h2 className="text-xl font-bold text-foreground">Recent Job Postings</h2>
-                <button className="text-blue-600 dark:text-blue-400 font-medium text-sm hover:underline">View All</button>
+                <Link to="/company/jobs" className="text-blue-600 dark:text-blue-400 font-medium text-sm hover:underline">View All</Link>
             </div>
             <div className="overflow-x-auto">
                 <table className="w-full text-left text-sm text-foreground-muted">
@@ -76,7 +78,12 @@ const RecentJobPostings = ({ jobs = [] }) => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-right">
-                                        <button className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 transition-colors">View Details</button>
+                                        <button
+                                            onClick={() => navigate('/company/jobs')}
+                                            className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                                        >
+                                            View Details
+                                        </button>
                                     </td>
                                 </tr>
                             ))

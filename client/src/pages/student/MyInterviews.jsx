@@ -22,7 +22,7 @@ const MyInterviews = () => {
         try {
             // Map tab to backend status or filter logic
             let statusParam = "";
-            if (activeTab === "Upcoming") statusParam = "Scheduled";
+            if (activeTab === "Upcoming") statusParam = "Upcoming";
             else if (activeTab === "Completed") statusParam = "Completed";
             else if (activeTab === "Cancelled") statusParam = "Cancelled";
 

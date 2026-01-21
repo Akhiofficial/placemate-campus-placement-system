@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { Plus, Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import StatsCards from '../../components/company/StatsCards';
 import RecentJobPostings from '../../components/company/RecentJobPostings';
 import { getCompanyDashboardStats, getRecentJobPostings } from '../../api/companyApi';
+
 
 const CompanyDashboard = () => {
     const [stats, setStats] = useState(null);
@@ -60,12 +61,20 @@ const CompanyDashboard = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground tracking-tight">Overview</h1>
-                    <p className="text-foreground-muted mt-1">Welcome back. Here is what's happening today.</p>
+                    <p className="text-foreground-muted mt-1">
+                        Welcome back, {stats?.recruiterName || 'Recruiter'} at {stats?.companyName || 'Company'}. Here is what's happening today.
+                    </p>
                 </div>
-                <Link to="/company/jobs/create" className="flex items-center justify-center gap-2 bg-card dark:bg-card border border-border hover:bg-background-muted text-foreground font-semibold py-2.5 px-5 rounded-lg shadow-sm transition-all text-sm group">
-                    <Plus size={18} className="text-foreground-muted group-hover:text-foreground" />
-                    Create New Job
-                </Link>
+                <div className="flex items-center gap-3">
+                    <Link to="/company/notifications" className="p-2.5 bg-card dark:bg-card border border-border rounded-lg text-foreground-muted hover:text-foreground hover:bg-background-muted transition-colors relative">
+                        <Bell size={20} />
+                        {/* Optional unread indicator could go here */}
+                    </Link>
+                    <Link to="/company/jobs/create" className="flex items-center justify-center gap-2 bg-card dark:bg-card border border-border hover:bg-background-muted text-foreground font-semibold py-2.5 px-5 rounded-lg shadow-sm transition-all text-sm group">
+                        <Plus size={18} className="text-foreground-muted group-hover:text-foreground" />
+                        Create New Job
+                    </Link>
+                </div>
             </div>
 
             {/* Stats Cards */}

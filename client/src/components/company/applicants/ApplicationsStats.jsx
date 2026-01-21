@@ -34,10 +34,43 @@ const stats = [
     },
 ];
 
-const ApplicationsStats = () => {
+const ApplicationsStats = ({ stats }) => {
+    const displayStats = [
+        {
+            title: 'Total Applicants',
+            value: stats?.totalApplicants || 0,
+            change: '+12%', // Backend doesn't provide change yet
+            icon: Users,
+            bgClass: 'bg-white dark:bg-card',
+            iconColor: 'text-blue-200',
+            trendColor: 'text-green-600 bg-green-50 dark:bg-green-500/10',
+        },
+        {
+            title: 'Shortlisted Candidates',
+            value: stats?.shortlisted || 0,
+            change: '+5%',
+            subtext: 'Ready for interview',
+            icon: CheckCircle,
+            bgClass: 'bg-white dark:bg-card',
+            iconColor: 'text-green-200',
+            trendColor: 'text-green-600 bg-green-50 dark:bg-green-500/10',
+        },
+        {
+            title: 'Avg. Resume Score',
+            value: stats?.avgScore || 0,
+            maxValue: '/100',
+            change: '+2.4%',
+            subtext: 'AI Based Assessment',
+            icon: BrainCircuit,
+            bgClass: 'bg-white dark:bg-card',
+            iconColor: 'text-purple-200',
+            trendColor: 'text-green-600 bg-green-50 dark:bg-green-500/10',
+        },
+    ];
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {stats.map((stat, index) => (
+            {displayStats.map((stat, index) => (
                 <div key={index} className={`${stat.bgClass} border border-border rounded-xl p-6 shadow-sm relative overflow-hidden`}>
                     <div className="relative z-10">
                         <p className="text-foreground-muted text-sm font-medium mb-2">{stat.title}</p>

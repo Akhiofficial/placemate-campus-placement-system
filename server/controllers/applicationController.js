@@ -1,5 +1,6 @@
 const Application = require('../models/Application');
 const Job = require('../models/Job');
+const Notification = require('../models/Notification');
 
 // Helper to generate Application ID
 const generateApplicationId = () => {
@@ -38,6 +39,22 @@ exports.applyForJob = async (req, res) => {
         });
 
         await application.save();
+        await application.save();
+
+        // Create Notification for the Company
+        try {
+            await Notification.create({
+                recipient: job.postedBy, // The company who posted the job
+                type: 'info',
+                message: `New applicant for ${job.title}: ${req.user.name || 'A student'} has applied.`,
+                relatedId: application._id,
+                onModel: 'Application'
+            });
+        } catch (notifErr) {
+            console.error("Failed to create notification:", notifErr.message);
+            // Don't fail the application process just because notification failed
+        }
+
         res.json({ msg: 'Application submitted successfully', application });
     } catch (err) {
         console.error(err.message);

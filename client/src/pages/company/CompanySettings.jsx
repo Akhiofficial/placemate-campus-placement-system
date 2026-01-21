@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import {
     User,
     Bell,
@@ -11,8 +12,11 @@ import {
     Shield,
     Trash2
 } from 'lucide-react';
+import { getMe, updateUserDetails, changePassword } from '../../api/authApi';
+import { X } from 'lucide-react';
 
 const CompanySettings = () => {
+    const { refreshUser } = useOutletContext();
     // Account Settings State
     const [accountForm, setAccountForm] = useState({
         fullName: 'Jane Doe',
@@ -28,33 +32,38 @@ const CompanySettings = () => {
         jobStatus: false
     });
 
-    // Team Members Mock Data
-    const [teamMembers, setTeamMembers] = useState([
-        {
-            id: 1,
-            name: 'Michael Scott',
-            email: 'michael@acmecorp.com',
-            role: 'Admin',
-            status: 'Active',
-            avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=150'
-        },
-        {
-            id: 2,
-            name: 'Jim Halpert',
-            email: 'jim.h@acmecorp.com',
-            role: 'Recruiter',
-            status: 'Active',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=150'
-        },
-        {
-            id: 3,
-            name: 'Pam Beesly',
-            email: 'pam.b@acmecorp.com',
-            role: 'Editor',
-            status: 'Invited',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&q=80&w=150'
+    // Password Change State
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordForm, setPasswordForm] = useState({
+        oldPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+    });
+
+    const fetchSettings = async () => {
+        try {
+            const { data } = await getMe();
+            setAccountForm({
+                fullName: data.name,
+                email: data.email,
+                role: data.jobTitle || 'Recruiter',
+                password: '' // Don't show password
+            });
+            if (data.notificationPreferences) {
+                setNotifications(prev => ({ ...prev, ...data.notificationPreferences }));
+            }
+        } catch (err) {
+            console.error("Failed to fetch settings", err);
         }
-    ]);
+    };
+    React.useEffect(() => {
+        fetchSettings();
+    }, []);
+
+    const handleDiscard = () => {
+        fetchSettings();
+        refreshUser(); // Refresh sidebar too
+    };
 
     const handleAccountChange = (e) => {
         const { name, value } = e.target;
@@ -63,6 +72,39 @@ const CompanySettings = () => {
 
     const toggleNotification = (key) => {
         setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const handleSave = async () => {
+        try {
+            await updateUserDetails({
+                name: accountForm.fullName,
+                email: accountForm.email,
+                jobTitle: accountForm.role,
+                notificationPreferences: notifications
+            });
+            await refreshUser(); // Refresh sidebar data immediately
+            alert('Settings saved successfully');
+        } catch (err) {
+            console.error('Failed to save settings', err);
+            alert('Failed to save settings');
+        }
+    };
+
+    const handlePasswordSubmit = async (e) => {
+        e.preventDefault();
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            alert("New passwords do not match");
+            return;
+        }
+        try {
+            await changePassword(passwordForm.oldPassword, passwordForm.newPassword);
+            alert("Password changed successfully");
+            setShowPasswordModal(false);
+            setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+        } catch (err) {
+            console.error(err);
+            alert(typeof err === 'string' ? err : "Failed to change password");
+        }
     };
 
     return (
@@ -74,10 +116,13 @@ const CompanySettings = () => {
                     <p className="text-foreground-muted mt-1">Manage your recruiter account and team preferences</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="px-5 py-2.5 text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors">
+                    <button
+                        onClick={handleDiscard}
+                        className="px-5 py-2.5 text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors"
+                    >
                         Discard Changes
                     </button>
-                    <button className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition-all">
+                    <button onClick={handleSave} className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm transition-all">
                         Save Settings
                     </button>
                 </div>
@@ -114,28 +159,7 @@ const CompanySettings = () => {
                         />
                     </div>
 
-                    {/* Role */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-foreground">Role</label>
-                        <div className="relative">
-                            <select
-                                name="role"
-                                value={accountForm.role}
-                                onChange={handleAccountChange}
-                                className="w-full px-4 py-2.5 bg-gray-50 dark:bg-background-muted border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all appearance-none cursor-pointer"
-                            >
-                                <option>Senior Recruiter</option>
-                                <option>Recruiter</option>
-                                <option>Hiring Manager</option>
-                                <option>Admin</option>
-                            </select>
-                            <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="m6 9 6 6 6-6" />
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
+
 
                     {/* Password */}
                     <div className="space-y-2">
@@ -143,11 +167,14 @@ const CompanySettings = () => {
                         <div className="flex items-center gap-3">
                             <input
                                 type="password"
-                                value={accountForm.password}
+                                value="********"
                                 readOnly
                                 className="w-full px-4 py-2.5 bg-gray-100 dark:bg-background/50 border border-border rounded-lg text-sm text-foreground-muted cursor-not-allowed"
                             />
-                            <button className="shrink-0 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors">
+                            <button
+                                onClick={() => setShowPasswordModal(true)}
+                                className="shrink-0 text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                            >
                                 Change
                             </button>
                         </div>
@@ -212,73 +239,72 @@ const CompanySettings = () => {
                 </div>
             </div>
 
-            {/* Team Management Section */}
-            <div className="bg-white dark:bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-border flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <Users className="text-blue-600" size={24} />
-                        <h2 className="text-lg font-bold text-foreground">Team Management</h2>
+            {/* Password Change Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white dark:bg-card w-full max-w-md rounded-xl shadow-xl overflow-hidden border border-border">
+                        <div className="p-6 border-b border-border flex items-center justify-between">
+                            <h3 className="text-lg font-bold text-foreground">Change Password</h3>
+                            <button
+                                onClick={() => setShowPasswordModal(false)}
+                                className="text-foreground-muted hover:text-foreground transition-colors"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-foreground">Current Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={passwordForm.oldPassword}
+                                    onChange={(e) => setPasswordForm(prev => ({ ...prev, oldPassword: e.target.value }))}
+                                    className="w-full px-4 py-2 bg-gray-50 dark:bg-background-muted border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    placeholder="Enter current password"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-foreground">New Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={passwordForm.newPassword}
+                                    onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
+                                    className="w-full px-4 py-2 bg-gray-50 dark:bg-background-muted border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    placeholder="Enter new password"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-sm font-semibold text-foreground">Confirm New Password</label>
+                                <input
+                                    type="password"
+                                    required
+                                    value={passwordForm.confirmPassword}
+                                    onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                                    className="w-full px-4 py-2 bg-gray-50 dark:bg-background-muted border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    placeholder="Confirm new password"
+                                />
+                            </div>
+                            <div className="pt-2 flex justify-end gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPasswordModal(false)}
+                                    className="px-4 py-2 text-sm font-semibold text-foreground-muted hover:text-foreground transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm transition-all"
+                                >
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <button className="flex items-center gap-2 text-sm font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-4 py-2 rounded-lg transition-colors">
-                        <Plus size={16} />
-                        Invite Member
-                    </button>
                 </div>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-50/50 dark:bg-background-muted border-b border-border">
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Member</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Role</th>
-                                <th className="px-6 py-4 text-xs font-bold text-foreground-muted uppercase tracking-wider">Status</th>
-                                <th className="px-6 py-4 text-right text-xs font-bold text-foreground-muted uppercase tracking-wider">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border">
-                            {teamMembers.map((member) => (
-                                <tr key={member.id} className="hover:bg-gray-50 dark:hover:bg-background-muted/50 transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-3">
-                                            <img src={member.avatar} alt={member.name} className="w-10 h-10 rounded-full object-cover border border-border" />
-                                            <div>
-                                                <p className="text-sm font-bold text-foreground">{member.name}</p>
-                                                <p className="text-xs text-foreground-muted">{member.email}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium 
-                                            ${member.role === 'Admin' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' :
-                                                member.role === 'Recruiter' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
-                                                    'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'}`}>
-                                            {member.role}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`w-2 h-2 rounded-full ${member.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'}`}></span>
-                                            <span className={`text-sm font-medium ${member.status === 'Active' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
-                                                {member.status}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button className="p-2 text-gray-400 hover:text-foreground hover:bg-gray-100 dark:hover:bg-background-muted rounded-full transition-colors">
-                                            <MoreVertical size={16} />
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-                <div className="p-4 border-t border-border mt-auto">
-                    <button className="w-full py-2 text-sm text-center text-foreground-muted hover:text-blue-600 font-medium transition-colors">
-                        View All Members
-                    </button>
-                </div>
-            </div>
+            )}
         </div>
     );
 };

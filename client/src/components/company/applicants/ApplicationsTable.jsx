@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Eye, MoreHorizontal, Download, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const ApplicationsTable = ({ candidates }) => {
+const ApplicationsTable = ({ candidates, onStatusUpdate }) => {
     const [selected, setSelected] = useState([]);
+    const [activeMenuId, setActiveMenuId] = useState(null);
 
     const toggleSelect = (id) => {
         if (selected.includes(id)) {
@@ -12,11 +13,24 @@ const ApplicationsTable = ({ candidates }) => {
         }
     };
 
+    const toggleMenu = (id) => {
+        if (activeMenuId === id) setActiveMenuId(null);
+        else setActiveMenuId(id);
+    };
+
+    const handleStatusClick = (id, status) => {
+        onStatusUpdate(id, status);
+        setActiveMenuId(null);
+    };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'Shortlisted': return 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/30';
             case 'Pending': return 'bg-amber-50 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-100 dark:border-amber-500/30';
             case 'Rejected': return 'bg-rose-50 text-rose-700 dark:bg-rose-500/20 dark:text-rose-400 border border-rose-100 dark:border-rose-500/30';
+            case 'Interview': return 'bg-purple-50 text-purple-700 dark:bg-purple-500/20 dark:text-purple-400 border border-purple-100 dark:border-purple-500/30';
+            case 'Offer': return 'bg-blue-50 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 border border-blue-100 dark:border-blue-500/30';
+            case 'Applied': return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700';
             default: return 'bg-gray-50 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
         }
     };
@@ -35,8 +49,8 @@ const ApplicationsTable = ({ candidates }) => {
 
 
     return (
-        <div className="bg-white dark:bg-card border border-border rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
+        <div className="bg-white dark:bg-card border border-border rounded-xl shadow-sm overflow-visible pb-24 mb-4">
+            <div className="overflow-visible">
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-white dark:bg-card border-b border-border text-xs uppercase text-gray-400 dark:text-gray-500 font-bold tracking-wider">
@@ -56,7 +70,7 @@ const ApplicationsTable = ({ candidates }) => {
                             const matchLabel = getMatchLabel(candidate.aiMatch);
 
                             return (
-                                <tr key={candidate.id} className="hover:bg-gray-50/80 dark:hover:bg-background-muted transition-colors group bg-white dark:bg-card">
+                                <tr key={candidate.id} className="hover:bg-gray-50/80 dark:hover:bg-background-muted transition-colors group bg-white dark:bg-card relative">
                                     <td className="p-4 pl-6">
                                         <input
                                             type="checkbox"
@@ -115,10 +129,28 @@ const ApplicationsTable = ({ candidates }) => {
                                             {candidate.status}
                                         </span>
                                     </td>
-                                    <td className="p-4 pr-6">
-                                        <button className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
+                                    <td className="p-4 pr-6 relative">
+                                        <button
+                                            onClick={() => toggleMenu(candidate.id)}
+                                            className="p-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                                        >
                                             <MoreHorizontal size={20} />
                                         </button>
+
+                                        {/* Dropdown Menu */}
+                                        {activeMenuId === candidate.id && (
+                                            <div className="absolute right-8 top-8 z-50 w-40 bg-white dark:bg-slate-800 border border-border dark:border-slate-700 rounded-lg shadow-lg py-1 animate-in fade-in zoom-in-95 duration-100">
+                                                {['Shortlisted', 'Pending', 'Rejected', 'Interview', 'Offer'].map((status) => (
+                                                    <button
+                                                        key={status}
+                                                        onClick={() => handleStatusClick(candidate.id, status)}
+                                                        className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                                                    >
+                                                        {status}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
                                     </td>
                                 </tr>
                             )

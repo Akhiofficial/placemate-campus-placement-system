@@ -1,6 +1,7 @@
 // server/controllers/authController.js
 const User = require('../models/User');
 const AdminRequest = require('../models/AdminRequest');
+const CompanyProfile = require('../models/CompanyProfile');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
@@ -9,7 +10,7 @@ const sendEmail = require('../utils/sendEmail');
 // @route   POST /api/auth/signup
 // @access  Public
 exports.signup = async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, companyName } = req.body;
 
     if (!name || !email || !password) {
         return res.status(400).json({ msg: 'Please provide name, email and password' });
@@ -30,7 +31,13 @@ exports.signup = async (req, res) => {
             return res.status(400).json({ msg: 'User already exists' });
         }
         // Create user (student or company only)
-        user = new User({ name, email, password, role: role || 'student' });
+        user = new User({
+            name,
+            email,
+            password,
+            role: role || 'student',
+            companyName: role === 'company' ? companyName : undefined
+        });
         await user.save();
         // Generate token
         const payload = { userId: user.id, role: user.role };
@@ -162,6 +169,77 @@ exports.changePassword = async (req, res) => {
         await user.save(); // Pre-save hook will hash the new password
 
         res.json({ msg: 'Password changed successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+
+// @desc    Update User Details
+// @route   PUT /api/auth/update-details
+// @access  Private
+exports.updateDetails = async (req, res) => {
+    try {
+        const { name, email, jobTitle, notificationPreferences } = req.body;
+        const user = await User.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (jobTitle) user.jobTitle = jobTitle;
+        if (notificationPreferences) {
+            // Ensure notificationPreferences exists
+            if (!user.notificationPreferences) {
+                user.notificationPreferences = {};
+            }
+
+            // Explicitly update fields to handle Mongoose subdocument correctly
+            if (notificationPreferences.newApplicant !== undefined) {
+                user.notificationPreferences.newApplicant = notificationPreferences.newApplicant;
+            }
+            if (notificationPreferences.interviewReminders !== undefined) {
+                user.notificationPreferences.interviewReminders = notificationPreferences.interviewReminders;
+            }
+            if (notificationPreferences.jobStatus !== undefined) {
+                user.notificationPreferences.jobStatus = notificationPreferences.jobStatus;
+            }
+        }
+
+        await user.save();
+        res.json({
+            success: true,
+            data: user
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Get current logged in user
+// @route   GET /api/auth/me
+// @access  Private
+exports.getMe = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        let userData = user.toObject();
+
+        if (user.role === 'company') {
+            const profile = await CompanyProfile.findOne({ company: user._id }).select('logo companyName name');
+            if (profile) {
+                userData.companyLogo = profile.logo;
+                if (profile.name) userData.companyName = profile.name; // Override with profile company name
+            }
+        }
+
+        res.json({
+            success: true,
+            data: userData
+        });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

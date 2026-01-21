@@ -9,6 +9,10 @@ const UserSchema = new mongoose.Schema({
         required: true,
         trim: true,
     },
+    companyName: {
+        type: String,
+        trim: true,
+    },
     email: {
         type: String,
         required: true,
@@ -24,6 +28,15 @@ const UserSchema = new mongoose.Schema({
         type: String,
         enum: ['student', 'company', 'admin'],
         default: 'student',
+    },
+    jobTitle: {
+        type: String,
+        trim: true,
+    },
+    notificationPreferences: {
+        newApplicant: { type: Boolean, default: true },
+        interviewReminders: { type: Boolean, default: true },
+        jobStatus: { type: Boolean, default: true }
     },
     isApproved: {
         type: Boolean,

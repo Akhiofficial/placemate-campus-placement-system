@@ -28,12 +28,19 @@ const JobDetails = () => {
     };
 
     const handleApply = async () => {
-        // Placeholder for apply logic - to be implemented later
-        setApplying(true);
-        setTimeout(() => {
-            alert("Application functionality coming soon!");
+        try {
+            setApplying(true);
+            const response = await api.post(`/applications/${id}`);
+            alert('Application submitted successfully!'); // or a toast
+            // Optionally update local state to show "Applied" instead of button
+            // Refetch job details or update a local status flag if backend supported "hasApplied"
+        } catch (error) {
+            console.error("Application failed", error);
+            const msg = error.response?.data?.msg || "Failed to apply. Please try again.";
+            alert(msg);
+        } finally {
             setApplying(false);
-        }, 1000);
+        }
     };
 
     if (loading) {

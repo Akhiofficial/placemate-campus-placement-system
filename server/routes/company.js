@@ -10,9 +10,19 @@ const {
     updateApplicationStatus,
     getInterviewStats,
     getCompanyInterviews,
-    scheduleInterview
+    scheduleInterview,
+    updateInterviewStatus,
+    getInterviewById,
+    updateInterview,
+    deleteInterview,
+    getCompanyProfile,
+    updateCompanyProfile,
+
+    createJob,
+    updateJob
 } = require('../controllers/companyController');
 const { protect, authorize } = require('../middleware/auth');
+const uploadImage = require('../middleware/uploadImage');
 
 const router = express.Router();
 
@@ -24,6 +34,16 @@ router.use(authorize('company'));
 // @desc    Get stats for company dashboard
 // @access  Private (Company)
 router.get('/dashboard-stats', getDashboardStats);
+
+// @route   POST /api/company/jobs
+// @desc    Create a new job posting
+// @access  Private (Company)
+router.post('/jobs', createJob);
+
+// @route   PUT /api/company/jobs/:id
+// @desc    Update a job posting
+// @access  Private (Company)
+router.put('/jobs/:id', updateJob);
 
 // @route   GET /api/company/recent-postings
 // @desc    Get recent job postings for company dashboard
@@ -78,6 +98,37 @@ router.get('/interviews', getCompanyInterviews);
 // @access  Private (Company)
 router.post('/schedule-interview', scheduleInterview);
 
+
+
+// @route   PUT /api/company/interviews/:id/status
+// @desc    Update interview status
+// @access  Private (Company)
+router.put('/interviews/:id/status', updateInterviewStatus);
+
+// @route   GET /api/company/interviews/:id
+// @desc    Get single interview details
+// @access  Private (Company)
+router.get('/interviews/:id', getInterviewById);
+
+// @route   PUT /api/company/interviews/:id
+// @desc    Update interview details
+// @access  Private (Company)
+router.put('/interviews/:id', updateInterview);
+
+// @route   DELETE /api/company/interviews/:id
+// @desc    Delete interview
+// @access  Private (Company)
+router.delete('/interviews/:id', deleteInterview);
+
+// @route   GET /api/company/profile
+// @desc    Get company profile
+// @access  Private (Company)
+router.get('/profile', getCompanyProfile);
+
+// @route   PUT /api/company/profile
+// @desc    Update company profile
+// @access  Private (Company)
+router.put('/profile', protect, authorize('company'), uploadImage.fields([{ name: 'logo', maxCount: 1 }, { name: 'coverImage', maxCount: 1 }]), updateCompanyProfile);
 
 
 module.exports = router;

@@ -141,7 +141,7 @@ const SignupForm = () => {
                     label="Full Name"
                     name="fullName"
                     type="text"
-                    placeholder="John Doe"
+                    placeholder="Enter your full name"
                     value={formData.fullName}
                     onChange={handleChange}
                     icon={User}
@@ -153,7 +153,7 @@ const SignupForm = () => {
                     label="Email Address"
                     name="email"
                     type="email"
-                    placeholder="john@university.edu"
+                    placeholder="example@university.edu"
                     value={formData.email}
                     onChange={handleChange}
                     icon={Mail}

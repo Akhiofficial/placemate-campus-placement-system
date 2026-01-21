@@ -1,91 +1,118 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Download } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ApplicationsStats from '../../components/company/applicants/ApplicationsStats';
 import ApplicationsFilters from '../../components/company/applicants/ApplicationsFilters';
 import ApplicationsTable from '../../components/company/applicants/ApplicationsTable';
-
-// Dummy Data moved from Table
-const candidatesData = [
-    {
-        id: 1,
-        name: 'Sarah Johnson',
-        email: 'sarah.j@uni.edu',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        degree: 'B.Tech (CS)',
-        cgpa: '9.4 CGPA',
-        cgpaValue: 9.4,
-        skills: ['React', 'Node.js', '+2'],
-        aiMatch: 96,
-        status: 'Shortlisted'
-    },
-    {
-        id: 2,
-        name: 'Michael Chen',
-        email: 'michael.c@uni.edu',
-        image: 'https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        degree: 'B.Tech (IT)',
-        cgpa: '8.8 CGPA',
-        cgpaValue: 8.8,
-        skills: ['Python', 'Django'],
-        aiMatch: 85,
-        status: 'Pending'
-    },
-    {
-        id: 3,
-        name: 'Aisha Rao',
-        email: 'aisha.r@uni.edu',
-        image: 'https://ui-avatars.com/api/?name=Aisha+Rao&background=EBF4FF&color=7F9CF5',
-        degree: 'B.Tech (ECE)',
-        cgpa: '7.9 CGPA',
-        cgpaValue: 7.9,
-        skills: ['C++', 'Embedded'],
-        aiMatch: 62,
-        status: 'Rejected'
-    },
-    {
-        id: 4,
-        name: 'David Kim',
-        email: 'david.k@uni.edu',
-        image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-        degree: 'B.Tech (CS)',
-        cgpa: '8.9 CGPA',
-        cgpaValue: 8.9,
-        skills: ['Java', 'Spring'],
-        aiMatch: 82,
-        status: 'Pending'
-    },
-];
+import { getCompanyApplications, getApplicationsStats, updateApplicationStatus } from '../../api/companyApi';
 
 const CompanyApplicants = () => {
-    const [searchQuery, setSearchQuery] = React.useState('');
-    const [roleFilter, setRoleFilter] = React.useState('All');
-    const [cgpaFilter, setCgpaFilter] = React.useState('All');
-    const [statusFilter, setStatusFilter] = React.useState('All');
+    const [candidates, setCandidates] = useState([]);
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Filtering Logic
-    const filteredCandidates = candidatesData.filter(candidate => {
-        // Search
-        const searchLower = searchQuery.toLowerCase();
-        const searchMatch =
-            candidate.name.toLowerCase().includes(searchLower) ||
-            candidate.email.toLowerCase().includes(searchLower) ||
-            candidate.skills.some(skill => skill.toLowerCase().includes(searchLower));
+    // Filters & Pagination State
+    const [searchQuery, setSearchQuery] = useState('');
+    const [roleFilter, setRoleFilter] = useState('All');
+    const [cgpaFilter, setCgpaFilter] = useState('All');
+    const [statusFilter, setStatusFilter] = useState('All');
 
-        // Role (Mock logic as role isn't in data, assuming All for now or matching degree)
-        const roleMatch = roleFilter === 'All' || candidate.degree.includes(roleFilter);
+    // Debounce search query
+    const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
 
-        // CGPA
-        let cgpaMatch = true;
-        if (cgpaFilter === '> 9.0') cgpaMatch = candidate.cgpaValue >= 9.0;
-        else if (cgpaFilter === '> 8.0') cgpaMatch = candidate.cgpaValue >= 8.0;
-        else if (cgpaFilter === '> 7.0') cgpaMatch = candidate.cgpaValue >= 7.0;
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchQuery);
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchQuery]);
 
-        // Status
-        const statusMatch = statusFilter === 'All' || candidate.status === statusFilter;
+    // Fetch Data
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
 
-        return searchMatch && roleMatch && cgpaMatch && statusMatch;
-    });
+                // Build Filters Object
+                const filters = {};
+                if (debouncedSearch) filters.search = debouncedSearch;
+                if (roleFilter !== 'All') filters.role = roleFilter;
+                if (cgpaFilter !== 'All') filters.cgpa = cgpaFilter;
+                if (statusFilter !== 'All') filters.status = statusFilter;
+
+                const [statsData, appsData] = await Promise.all([
+                    getApplicationsStats(),
+                    getCompanyApplications(filters)
+                ]);
+
+                setStats(statsData);
+
+                // Map Backend Data to UI Structure (Response: { applications: [], total: ... })
+                const formattedCandidates = appsData.applications.map(app => ({
+                    id: app._id,
+                    name: app.student.name,
+                    email: app.student.email,
+                    image: app.student.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(app.student.name)}&background=random`,
+                    degree: `${app.degree || 'N/A'} (${app.branch || 'N/A'})`,
+                    cgpa: `${app.cgpa || 'N/A'} CGPA`,
+                    cgpaValue: app.cgpa || 0,
+                    skills: app.skills || [],
+                    aiMatch: app.aiScore || 0,
+                    status: app.status
+                }));
+
+                setCandidates(formattedCandidates);
+            } catch (error) {
+                console.error("Error fetching applications:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [debouncedSearch, roleFilter, cgpaFilter, statusFilter]);
+
+    const handleStatusUpdate = async (id, newStatus) => {
+        try {
+            await updateApplicationStatus(id, newStatus);
+            // Optimistic update
+            setCandidates(prev => prev.map(c =>
+                c.id === id ? { ...c, status: newStatus } : c
+            ));
+            alert(`Status updated to ${newStatus}`);
+        } catch (error) {
+            console.error("Failed to update status:", error);
+            alert("Failed to update status");
+        }
+    };
+
+    const handleExportCSV = () => {
+        if (!candidates.length) return alert("No data to export");
+
+        const headers = ["Name", "Email", "Degree", "CGPA", "Skills", "AI Match", "Status"];
+        const csvContent = [
+            headers.join(","),
+            ...candidates.map(c => [
+                `"${c.name}"`,
+                `"${c.email}"`,
+                `"${c.degree}"`,
+                `"${c.cgpa}"`,
+                `"${c.skills.join(", ")}"`,
+                `"${c.aiMatch}/100"`,
+                `"${c.status}"`
+            ].join(","))
+        ].join("\n");
+
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "applicants_data.csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
 
     return (
         <div className="max-w-7xl mx-auto">
@@ -96,7 +123,10 @@ const CompanyApplicants = () => {
                     <p className="text-foreground-muted mt-1">Review student applications, analyze AI scores, and shortlist candidates.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-card border border-border rounded-lg font-semibold text-foreground hover:bg-gray-50 dark:hover:bg-background-muted transition-colors shadow-sm text-sm">
+                    <button
+                        onClick={handleExportCSV}
+                        className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-card border border-border rounded-lg font-semibold text-foreground hover:bg-gray-50 dark:hover:bg-background-muted transition-colors shadow-sm text-sm"
+                    >
                         <Download size={18} className="text-gray-500" />
                         Export CSV
                     </button>
@@ -108,7 +138,7 @@ const CompanyApplicants = () => {
             </div>
 
             {/* Stats */}
-            <ApplicationsStats />
+            <ApplicationsStats stats={stats} />
 
             {/* Filters */}
             <ApplicationsFilters
@@ -123,7 +153,13 @@ const CompanyApplicants = () => {
             />
 
             {/* Table */}
-            <ApplicationsTable candidates={filteredCandidates} />
+            {loading ? (
+                <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+            ) : (
+                <ApplicationsTable candidates={candidates} onStatusUpdate={handleStatusUpdate} />
+            )}
         </div>
     );
 };

@@ -2,6 +2,7 @@ import { Bell, Moon, Sun } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTheme } from "../../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
+import NotificationsDropdown from "../common/NotificationsDropdown";
 
 const DashboardHeader = ({ user, showBrowseJobs = true }) => {
   const { theme, toggleTheme } = useTheme();
@@ -39,13 +40,7 @@ const DashboardHeader = ({ user, showBrowseJobs = true }) => {
         </motion.button>
 
         {/* Notification */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="p-2.5 rounded-full bg-card border border-border text-foreground-muted hover:bg-background-muted transition cursor-pointer"
-        >
-          <Bell size={18} />
-        </motion.button>
+        <NotificationsDropdown />
 
         {/* Primary Action */}
         {showBrowseJobs && (

@@ -29,16 +29,46 @@ const stats = [
     },
 ];
 
-const InterviewStats = () => {
+const InterviewStats = ({ stats }) => {
+
+    const displayStats = [
+        {
+            title: 'Interviews Today',
+            value: stats?.interviewsToday || 0,
+            trend: '+2 from yesterday', // This requires backend historical data, keeping static or hiding if not available. Removing for now or keeping static placeholder? Let's keep specific logic simple.
+            // trendColor: 'text-green-600',
+            subtext: "Scheduled for today",
+            icon: Calendar,
+            bgClass: 'bg-white dark:bg-card',
+            iconBg: 'bg-blue-50 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400',
+        },
+        {
+            title: 'Pending Feedback',
+            value: stats?.pendingFeedback || 0,
+            subtext: 'Needs attention',
+            icon: ClipboardList,
+            bgClass: 'bg-white dark:bg-card',
+            iconBg: 'bg-orange-50 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400',
+        },
+        {
+            title: 'Total Shortlisted',
+            value: stats?.totalShortlisted || 0,
+            subtext: 'Across all active jobs',
+            icon: Users,
+            bgClass: 'bg-white dark:bg-card',
+            iconBg: 'bg-purple-50 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400',
+        },
+    ];
+
     return (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {stats.map((stat, index) => (
+            {displayStats.map((stat, index) => (
                 <div key={index} className={`${stat.bgClass} border border-border rounded-xl p-6 shadow-sm flex justify-between items-start`}>
                     <div>
                         <p className="text-foreground-muted text-sm font-medium mb-2">{stat.title}</p>
                         <h3 className="text-4xl font-bold text-foreground mb-2">{stat.value}</h3>
                         {stat.trend ? (
-                            <div className={`flex items-center gap-1 text-xs font-semibold ${stat.trendColor}`}>
+                            <div className={`flex items-center gap-1 text-xs font-semibold ${stat.trendColor || 'text-green-600'}`}>
                                 <TrendingUp size={14} />
                                 {stat.trend}
                             </div>
