@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Eye, MoreHorizontal, Download, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
+import { useNavigate } from 'react-router-dom';
+
 const ApplicationsTable = ({ candidates, onStatusUpdate }) => {
+    const navigate = useNavigate();
     const [selected, setSelected] = useState([]);
     const [activeMenuId, setActiveMenuId] = useState(null);
 
@@ -79,11 +82,11 @@ const ApplicationsTable = ({ candidates, onStatusUpdate }) => {
                                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                         />
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-4 cursor-pointer" onClick={() => navigate(`/company/applications/${candidate.id}`)}>
                                         <div className="flex items-center gap-3">
                                             <img src={candidate.image} alt={candidate.name} className="w-10 h-10 rounded-full object-cover border border-gray-100 dark:border-border shrink-0" />
                                             <div>
-                                                <h4 className="font-bold text-gray-900 dark:text-foreground text-sm">{candidate.name}</h4>
+                                                <h4 className="font-bold text-gray-900 dark:text-foreground text-sm hover:text-blue-600 transition-colors">{candidate.name}</h4>
                                                 <p className="text-xs text-gray-500 dark:text-foreground-muted">{candidate.email}</p>
                                             </div>
                                         </div>

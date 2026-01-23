@@ -105,9 +105,9 @@ const EditJobModal = ({ job, onClose, onSave }) => {
                                     className="w-full px-3 py-2 bg-white dark:bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                 >
                                     <option value="Full-time">Full-time</option>
-                                    <option value="Part-time">Part-time</option>
+                                    <option value="Internship">Internship</option>
                                     <option value="Contract">Contract</option>
-                                    <option value="Intern">Internship</option>
+                                    <option value="Freelance">Freelance</option>
                                 </select>
                             </div>
                             <div className="space-y-1.5">

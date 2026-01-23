@@ -17,7 +17,12 @@ const JobCard = ({ job, index }) => {
                 className={`w-10 h-10 ${job.logoBg || 'bg-blue-600'} text-white rounded-lg flex items-center justify-center font-semibold mb-4 overflow-hidden`}
             >
                 {job.companyLogo ? (
-                    <img src={job.companyLogo} alt={job.company} className="w-full h-full object-cover" />
+                    <img
+                        src={job.companyLogo.startsWith('http') ? job.companyLogo : `http://localhost:5000${job.companyLogo}`}
+                        alt={job.company}
+                        className="w-full h-full object-cover"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerText = job.company?.charAt(0).toUpperCase() || 'C'; }}
+                    />
                 ) : (
                     job.logo || job.company?.charAt(0).toUpperCase() || 'C'
                 )}

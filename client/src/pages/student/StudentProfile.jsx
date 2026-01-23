@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone, Github, Linkedin, Download, FileText, Edit, Globe, Loader2, Upload, Camera } from "lucide-react";
+import { Mail, MapPin, Phone, Github, Linkedin, Download, FileText, Edit, Globe, Loader2, Upload, Camera, Briefcase } from "lucide-react";
 import api from "../../api/axios";
 import EditProfileModal from "../../components/student/EditProfileModal";
 
@@ -231,6 +231,7 @@ const StudentProfile = () => {
                         </div>
 
                         {/* Skills */}
+                        {/* Skills */}
                         <div className="bg-card rounded-xl border border-border shadow-sm p-6">
                             <h2 className="text-lg font-semibold text-foreground mb-4">Skills</h2>
                             <div className="flex flex-wrap gap-2">
@@ -244,6 +245,63 @@ const StudentProfile = () => {
                                     <p className="text-sm text-foreground-muted">No skills added yet.</p>
                                 )}
                             </div>
+                        </div>
+
+                        {/* Experience Section */}
+                        <div className="bg-card rounded-xl border border-border shadow-sm p-6">
+                            <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+                                <Briefcase size={20} className="text-orange-600" /> Experience
+                            </h2>
+                            {profile?.experience && profile.experience.length > 0 ? (
+                                <div className="space-y-6">
+                                    {profile.experience.map((exp, i) => (
+                                        <div key={i} className="relative pl-6 border-l-2 border-border">
+                                            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-blue-100 border-2 border-blue-600 dark:bg-blue-900"></div>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="font-bold text-foreground">{exp.title}</h4>
+                                                <span className="text-xs font-semibold bg-background-muted px-2 py-1 rounded text-foreground-muted">
+                                                    {new Date(exp.startDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })} -
+                                                    {exp.current ? ' Present' : new Date(exp.endDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm font-medium text-blue-600 mb-2">{exp.company}</p>
+                                            <p className="text-sm text-foreground-muted leading-relaxed">{exp.description}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-foreground-muted italic">No experience added yet.</p>
+                            )}
+                        </div>
+
+                        {/* Projects Section */}
+                        <div className="bg-card rounded-xl border border-border shadow-sm p-6">
+                            <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+                                <FileText size={20} className="text-purple-600" /> Projects
+                            </h2>
+                            {profile?.projects && profile.projects.length > 0 ? (
+                                <div className="space-y-6">
+                                    {profile.projects.map((proj, i) => (
+                                        <div key={i} className="relative pl-6 border-l-2 border-border">
+                                            <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-purple-100 border-2 border-purple-600 dark:bg-purple-900"></div>
+                                            <div className="flex justify-between items-start mb-1">
+                                                <h4 className="font-bold text-foreground">{proj.title}</h4>
+                                                <span className="text-xs font-semibold bg-background-muted px-2 py-1 rounded text-foreground-muted">
+                                                    {proj.startDate && new Date(proj.startDate).getFullYear()}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-foreground-muted leading-relaxed mb-3">{proj.description}</p>
+                                            {proj.link && (
+                                                <a href={proj.link} target="_blank" rel="noopener" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                                    <Globe size={12} /> View Project
+                                                </a>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-foreground-muted italic">No projects added yet.</p>
+                            )}
                         </div>
                     </div>
 

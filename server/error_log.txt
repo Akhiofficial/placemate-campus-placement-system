@@ -1,0 +1,11 @@
+2026-01-22T10:34:03.073Z - MongoServerError: Plan executor error during findAndModify :: caused by :: E11000 duplicate key error collection: placemate.companyprofiles index: user_1 dup key: { user: null }
+    at Connection.sendCommand (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\node_modules\mongodb\lib\cmap\connection.js:320:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async Connection.command (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\node_modules\mongodb\lib\cmap\connection.js:344:26)
+    at async Server.command (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\node_modules\mongodb\lib\sdam\server.js:208:29)
+    at async tryOperation (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\node_modules\mongodb\lib\operations\execute_operation.js:215:32)
+    at async executeOperation (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\node_modules\mongodb\lib\operations\execute_operation.js:80:16)
+    at async Collection.findOneAndUpdate (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\node_modules\mongodb\lib\collection.js:544:16)
+    at async model.Query._findOneAndUpdate (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\node_modules\mongoose\lib\query.js:3547:13)
+    at async model.Query.exec (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\node_modules\mongoose\lib\query.js:4637:63)
+    at async exports.updateCompanyProfile (D:\Hackathons\Rackathon 2026\CodeBase\placemate-campus-placement-system\server\controllers\companyController.js:1060:23)

@@ -3,6 +3,7 @@ const Application = require('../models/Application');
 const Interview = require('../models/Interview');
 const Notification = require('../models/Notification');
 const CompanyProfile = require('../models/CompanyProfile');
+const StudentProfile = require('../models/StudentProfile');
 const User = require('../models/User');
 const crypto = require('crypto');
 
@@ -590,6 +591,38 @@ exports.getInterviewStats = async (req, res) => {
     }
 };
 
+// @desc    Get Applicant Details (Full Profile)
+// @route   GET /api/company/applications/:id
+// @access  Private (Company)
+exports.getApplicantDetails = async (req, res) => {
+    try {
+        const applicationId = req.params.id;
+
+        const application = await Application.findById(applicationId)
+            .populate('job', 'title company companyLogo location type salary')
+            .populate('student', 'name email');
+
+        if (!application) {
+            return res.status(404).json({ msg: 'Application not found' });
+        }
+
+        if (!application.student) {
+            return res.status(404).json({ msg: 'Student not found for this application' });
+        }
+
+        // Fetch Student Profile
+        const profile = await StudentProfile.findOne({ user: application.student._id });
+
+        res.json({
+            application,
+            profile: profile || {}
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
 // @desc    Get Company Interviews (Filtered & Paginated)
 // @route   GET /api/company/interviews
 // @access  Private (Company)
@@ -1063,7 +1096,68 @@ exports.updateCompanyProfile = async (req, res) => {
             { new: true, upsert: true, setDefaultsOnInsert: true }
         );
 
+        // Sync Company Name with User Model and Jobs
+        if (name) {
+            await User.findByIdAndUpdate(req.user.userId, { companyName: name });
+            await Job.updateMany({ postedBy: req.user.userId }, { company: name });
+        }
+
+        // Sync Logo with Jobs
+        if (profileFields.logo) { // Only if logo was updated
+            await Job.updateMany({ postedBy: req.user.userId }, { companyLogo: profileFields.logo });
+        }
+
         res.json(profile);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Get Public Company Profile (for students/others)
+// @route   GET /api/company/public/:id
+// @access  Public / Protected
+exports.getCompanyPublicProfile = async (req, res) => {
+    try {
+        const companyId = req.params.id; // This is the User ID of the company
+
+        // 1. Get User details (Name, Email)
+        const user = await User.findById(companyId).select('name email companyName');
+        if (!user) {
+            return res.status(404).json({ msg: 'Company user not found' });
+        }
+
+        // 2. Get Profile Details
+        const profile = await CompanyProfile.findOne({ company: companyId });
+
+        // 3. Construct Response
+        // If no profile exists yet, return basic info from User
+        if (!profile) {
+            return res.json({
+                name: user.companyName || user.name,
+                email: user.email,
+                // Return empty defaults for other fields
+                tagline: '',
+                location: '',
+                website: '',
+                about: '',
+                industry: '',
+                size: '',
+                founded: '',
+                headquarters: '',
+                social: { linkedin: '', twitter: '', website: '' },
+                logo: '',
+                coverImage: ''
+            });
+        }
+
+        // Return merged data
+        res.json({
+            ...profile.toObject(),
+            name: user.companyName || user.name, // Ensure accurate name from User model
+            email: user.email
+        });
+
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

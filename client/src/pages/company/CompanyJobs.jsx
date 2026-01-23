@@ -15,6 +15,7 @@ const CompanyJobs = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('All');
     const [typeFilter, setTypeFilter] = useState('All');
+    const [workModeFilter, setWorkModeFilter] = useState('All');
 
     // Modal State
     const [viewJob, setViewJob] = useState(null);
@@ -69,7 +70,7 @@ const CompanyJobs = () => {
         console.log("Publishing job", id);
         // Optimistic update
         setJobs(jobs.map(job =>
-            job.id === id ? { ...job, status: 'Active' } : job
+            job.id === id ? { ...job, status: 'Open' } : job
         ));
     };
 
@@ -180,6 +181,8 @@ const CompanyJobs = () => {
                 setStatusFilter={setStatusFilter}
                 typeFilter={typeFilter}
                 setTypeFilter={setTypeFilter}
+                workModeFilter={workModeFilter}
+                setWorkModeFilter={setWorkModeFilter}
             />
 
             {/* Job Grid */}
@@ -187,10 +190,11 @@ const CompanyJobs = () => {
                 {jobs.filter(job => {
                     const statusMatch = statusFilter === 'All' || job.status === statusFilter;
                     const typeMatch = typeFilter === 'All' || job.type === typeFilter;
+                    const workModeMatch = workModeFilter === 'All' || job.workMode === workModeFilter;
                     const searchMatch =
                         job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                         job.location.toLowerCase().includes(searchQuery.toLowerCase());
-                    return statusMatch && typeMatch && searchMatch;
+                    return statusMatch && typeMatch && workModeMatch && searchMatch;
                 }).map(job => (
                     <JobCard
                         key={job.id}

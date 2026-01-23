@@ -157,6 +157,14 @@ exports.updateProfile = async (req, res) => {
     if (portfolioUrl) profileFields.portfolioUrl = portfolioUrl;
     if (linkedinUrl) profileFields.linkedinUrl = linkedinUrl;
 
+    // Experience & Projects
+    if (req.body.experience) {
+        profileFields.experience = req.body.experience;
+    }
+    if (req.body.projects) {
+        profileFields.projects = req.body.projects;
+    }
+
     try {
         let profile = await StudentProfile.findOne({ user: req.user.userId });
 

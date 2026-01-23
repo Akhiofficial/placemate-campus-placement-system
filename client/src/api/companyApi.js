@@ -84,6 +84,16 @@ export const getCompanyApplications = async (filters = {}) => {
     }
 };
 
+// Get Applicant Details (Full Profile)
+export const getApplicantDetails = async (id) => {
+    try {
+        const response = await api.get(`/company/applications/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data?.msg || 'Failed to fetch applicant details';
+    }
+};
+
 // Update Application Status
 export const updateApplicationStatus = async (id, status) => {
     try {

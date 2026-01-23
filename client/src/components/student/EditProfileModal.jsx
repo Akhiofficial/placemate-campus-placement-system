@@ -16,7 +16,6 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
         bio: "",
 
         // Academic
-        course: "", // mapped to department/major?? Model has department and major
         department: "",
         major: "",
         currentSemester: "",
@@ -25,10 +24,14 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
         universityRollNo: "",
 
         // Professional/Skills
-        skills: "", // string for comma separated
+        skills: "",
         linkedinUrl: "",
         portfolioUrl: "",
-        resumeUrl: ""
+        resumeUrl: "",
+
+        // Experience & Projects
+        experience: [],
+        projects: []
     });
 
     useEffect(() => {
@@ -51,7 +54,10 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                 skills: profile.skills ? profile.skills.join(", ") : "",
                 linkedinUrl: profile.linkedinUrl || "",
                 portfolioUrl: profile.portfolioUrl || "",
-                resumeUrl: profile.resumeUrl || ""
+                resumeUrl: profile.resumeUrl || "",
+
+                experience: profile.experience || [],
+                projects: profile.projects || []
             });
         }
     }, [profile]);
@@ -64,6 +70,31 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
         }));
     };
 
+    // Dynamic Fields Handlers
+    const handleArrayChange = (index, field, value, type) => {
+        setFormData(prev => {
+            const updated = [...prev[type]];
+            updated[index] = { ...updated[index], [field]: value };
+            return { ...prev, [type]: updated };
+        });
+    };
+
+    const addEntry = (type) => {
+        setFormData(prev => ({
+            ...prev,
+            [type]: [...prev[type], type === 'experience'
+                ? { title: '', company: '', startDate: '', endDate: '', current: false, description: '' }
+                : { title: '', description: '', link: '', startDate: '' }]
+        }));
+    };
+
+    const removeEntry = (index, type) => {
+        setFormData(prev => ({
+            ...prev,
+            [type]: prev[type].filter((_, i) => i !== index)
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -73,7 +104,6 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
             onClose();
         } catch (error) {
             console.error("Error updating profile:", error);
-            // You might want to add a toast notification here
         } finally {
             setLoading(false);
         }
@@ -119,6 +149,12 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === "professional" ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10" : "text-foreground-muted hover:text-foreground hover:bg-background-muted"}`}
                             >
                                 <Briefcase size={18} /> Professional
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("portfolio")}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition ${activeTab === "portfolio" ? "bg-blue-50 text-blue-600 dark:bg-blue-500/10" : "text-foreground-muted hover:text-foreground hover:bg-background-muted"}`}
+                            >
+                                <Briefcase size={18} /> Exp & Projects
                             </button>
                         </div>
 
@@ -265,47 +301,78 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                         <div className="space-y-4">
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium text-foreground">LinkedIn URL</label>
-                                                <div className="relative">
-                                                    <LinkIcon className="absolute left-3 top-2.5 text-foreground-muted" size={16} />
-                                                    <input
-                                                        type="url"
-                                                        name="linkedinUrl"
-                                                        value={formData.linkedinUrl}
-                                                        onChange={handleChange}
-                                                        className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
-                                                        placeholder="https://linkedin.com/in/..."
-                                                    />
-                                                </div>
+                                                <input
+                                                    type="url"
+                                                    name="linkedinUrl"
+                                                    value={formData.linkedinUrl}
+                                                    onChange={handleChange}
+                                                    className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                                                    placeholder="https://linkedin.com/in/..."
+                                                />
                                             </div>
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium text-foreground">Portfolio URL</label>
-                                                <div className="relative">
-                                                    <LinkIcon className="absolute left-3 top-2.5 text-foreground-muted" size={16} />
-                                                    <input
-                                                        type="url"
-                                                        name="portfolioUrl"
-                                                        value={formData.portfolioUrl}
-                                                        onChange={handleChange}
-                                                        className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
-                                                        placeholder="https://myportfolio.com"
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="space-y-2">
-                                                <label className="text-sm font-medium text-foreground">Resume URL</label>
-                                                <div className="relative">
-                                                    <LinkIcon className="absolute left-3 top-2.5 text-foreground-muted" size={16} />
-                                                    <input
-                                                        type="url"
-                                                        name="resumeUrl"
-                                                        value={formData.resumeUrl}
-                                                        onChange={handleChange}
-                                                        className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
-                                                        placeholder="https://drive.google.com/..."
-                                                    />
-                                                </div>
+                                                <input
+                                                    type="url"
+                                                    name="portfolioUrl"
+                                                    value={formData.portfolioUrl}
+                                                    onChange={handleChange}
+                                                    className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                                                    placeholder="https://myportfolio.com"
+                                                />
                                             </div>
                                         </div>
+                                    </div>
+                                )}
+
+                                {activeTab === "portfolio" && (
+                                    <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+
+                                        {/* Experience Section */}
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center">
+                                                <h3 className="font-semibold text-lg">Experience</h3>
+                                                <button type="button" onClick={() => addEntry('experience')} className="text-sm text-blue-600 font-medium hover:underline">+ Add Experience</button>
+                                            </div>
+                                            {formData.experience.map((exp, index) => (
+                                                <div key={index} className="p-4 border border-border rounded-lg space-y-3 relative bg-gray-50 dark:bg-card">
+                                                    <button type="button" onClick={() => removeEntry(index, 'experience')} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
+                                                        <X size={16} />
+                                                    </button>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <input type="text" placeholder="Title" value={exp.title} onChange={(e) => handleArrayChange(index, 'title', e.target.value, 'experience')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                        <input type="text" placeholder="Company" value={exp.company} onChange={(e) => handleArrayChange(index, 'company', e.target.value, 'experience')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                    </div>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <input type="date" placeholder="Start Date" value={exp.startDate ? exp.startDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'startDate', e.target.value, 'experience')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                        <input type="date" placeholder="End Date" value={exp.endDate ? exp.endDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'endDate', e.target.value, 'experience')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                    </div>
+                                                    <textarea placeholder="Description" rows="2" value={exp.description} onChange={(e) => handleArrayChange(index, 'description', e.target.value, 'experience')} className="w-full px-3 py-2 border border-border rounded bg-white dark:bg-background resize-none" />
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Projects Section */}
+                                        <div className="space-y-4">
+                                            <div className="flex justify-between items-center">
+                                                <h3 className="font-semibold text-lg">Projects</h3>
+                                                <button type="button" onClick={() => addEntry('projects')} className="text-sm text-blue-600 font-medium hover:underline">+ Add Project</button>
+                                            </div>
+                                            {formData.projects.map((proj, index) => (
+                                                <div key={index} className="p-4 border border-border rounded-lg space-y-3 relative bg-gray-50 dark:bg-card">
+                                                    <button type="button" onClick={() => removeEntry(index, 'projects')} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
+                                                        <X size={16} />
+                                                    </button>
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        <input type="text" placeholder="Project Title" value={proj.title} onChange={(e) => handleArrayChange(index, 'title', e.target.value, 'projects')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                        <input type="url" placeholder="Project Link" value={proj.link} onChange={(e) => handleArrayChange(index, 'link', e.target.value, 'projects')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                    </div>
+                                                    <input type="date" placeholder="Start Date" value={proj.startDate ? proj.startDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'startDate', e.target.value, 'projects')} className="w-full px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                    <textarea placeholder="Description" rows="2" value={proj.description} onChange={(e) => handleArrayChange(index, 'description', e.target.value, 'projects')} className="w-full px-3 py-2 border border-border rounded bg-white dark:bg-background resize-none" />
+                                                </div>
+                                            ))}
+                                        </div>
+
                                     </div>
                                 )}
                             </form>

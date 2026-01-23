@@ -22,7 +22,8 @@ const CompanySettings = () => {
         fullName: 'Jane Doe',
         email: 'jane.doe@acmecorp.com',
         role: 'Senior Recruiter',
-        password: 'password123'
+        password: 'password123',
+        companyName: ''
     });
 
     // Notification Preferences State
@@ -47,6 +48,7 @@ const CompanySettings = () => {
                 fullName: data.name,
                 email: data.email,
                 role: data.jobTitle || 'Recruiter',
+                companyName: data.companyName || '',
                 password: '' // Don't show password
             });
             if (data.notificationPreferences) {
@@ -80,6 +82,7 @@ const CompanySettings = () => {
                 name: accountForm.fullName,
                 email: accountForm.email,
                 jobTitle: accountForm.role,
+                companyName: accountForm.companyName,
                 notificationPreferences: notifications
             });
             await refreshUser(); // Refresh sidebar data immediately
@@ -156,6 +159,19 @@ const CompanySettings = () => {
                             value={accountForm.email}
                             onChange={handleAccountChange}
                             className="w-full px-4 py-2.5 bg-gray-50 dark:bg-background-muted border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                        />
+                    </div>
+
+                    {/* Company Name */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-foreground">Company Name</label>
+                        <input
+                            type="text"
+                            name="companyName"
+                            value={accountForm.companyName}
+                            onChange={handleAccountChange}
+                            className="w-full px-4 py-2.5 bg-gray-50 dark:bg-background-muted border border-border rounded-lg text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                            placeholder="e.g. Acme Corp"
                         />
                     </div>
 

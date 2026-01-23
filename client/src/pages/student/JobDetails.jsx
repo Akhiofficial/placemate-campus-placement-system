@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Briefcase, DollarSign, Clock, Building, Calendar, CheckCircle } from "lucide-react";
+import { ArrowLeft, MapPin, Briefcase, DollarSign, Clock, Building, Calendar, CheckCircle, Eye } from "lucide-react";
 import api from "../../api/axios";
 
 const JobDetails = () => {
@@ -86,7 +86,12 @@ const JobDetails = () => {
                         <div className="flex gap-5">
                             <div className={`w-20 h-20 ${job.logoBg || 'bg-blue-600'} text-white rounded-xl flex items-center justify-center font-bold text-3xl overflow-hidden shadow-sm`}>
                                 {job.companyLogo ? (
-                                    <img src={job.companyLogo} alt={job.company} className="w-full h-full object-cover" />
+                                    <img
+                                        src={job.companyLogo.startsWith('http') ? job.companyLogo : `http://localhost:5000${job.companyLogo}`}
+                                        alt={job.company}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerText = job.company?.charAt(0).toUpperCase() || 'C'; }}
+                                    />
                                 ) : (
                                     job.company?.charAt(0).toUpperCase() || 'C'
                                 )}
@@ -114,6 +119,13 @@ const JobDetails = () => {
                                 className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition shadow-md shadow-blue-600/20 disabled:opacity-70 disabled:cursor-not-allowed"
                             >
                                 {applying ? "Applying..." : "Apply Now"}
+                            </button>
+                            <button
+                                onClick={() => navigate(`/student/company/${job.postedBy}`)}
+                                className="w-full py-3 bg-card border border-border text-foreground rounded-xl font-semibold hover:bg-background-muted transition flex items-center justify-center gap-2"
+                            >
+                                <Eye size={18} />
+                                View Profile
                             </button>
                             <div className="text-center text-sm text-foreground-muted">
                                 Posted {new Date(job.createdAt).toLocaleDateString()}

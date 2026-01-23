@@ -10,6 +10,7 @@ import JobDetails from './pages/student/JobDetails'
 import MyApplications from './pages/student/MyApplications'
 import MyInterviews from './pages/student/MyInterviews'
 import StudentSettings from './pages/student/StudentSettings'
+import CompanyProfileView from './pages/student/CompanyProfileView'
 import StudentLayout from './components/layout/StudentLayout'
 import CompanyLayout from './components/layout/CompanyLayout'
 import CompanyDashboard from './pages/company/CompanyDashboard'
@@ -17,6 +18,7 @@ import CompanyNotifications from './pages/company/CompanyNotifications'
 import CompanyJobs from './pages/company/CompanyJobs'
 import CreateJob from './pages/company/CreateJob'
 import CompanyApplicants from './pages/company/CompanyApplicants'
+import ApplicantProfile from './pages/company/ApplicantProfile'
 import CompanyInterviews from './pages/company/CompanyInterviews'
 import ScheduleInterview from './pages/company/ScheduleInterview'
 import CompanyProfile from './pages/company/CompanyProfile'
@@ -48,6 +50,7 @@ const App = () => {
             <Route path="/student/jobs/:id" element={<JobDetails />} />
             <Route path="/student/applications" element={<MyApplications />} />
             <Route path="/student/interviews" element={<MyInterviews />} />
+            <Route path="/student/company/:id" element={<CompanyProfileView />} />
             <Route path="/student/settings" element={<StudentSettings />} />
           </Route>
 
@@ -57,6 +60,7 @@ const App = () => {
             <Route path="/company/jobs" element={<CompanyJobs />} />
             <Route path="/company/jobs/create" element={<CreateJob />} />
             <Route path="/company/applicants" element={<CompanyApplicants />} />
+            <Route path="/company/applications/:id" element={<ApplicantProfile />} />
             <Route path="/company/interviews" element={<CompanyInterviews />} />
             <Route path="/company/interviews/schedule" element={<ScheduleInterview />} />
             <Route path="/company/interviews/edit/:id" element={<ScheduleInterview />} />

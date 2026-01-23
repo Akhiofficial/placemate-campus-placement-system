@@ -5,6 +5,7 @@ const CompanyProfile = require('../models/CompanyProfile');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const sendEmail = require('../utils/sendEmail');
+const Job = require('../models/Job');
 
 // @desc    Register new user
 // @route   POST /api/auth/signup
@@ -181,7 +182,7 @@ exports.changePassword = async (req, res) => {
 // @access  Private
 exports.updateDetails = async (req, res) => {
     try {
-        const { name, email, jobTitle, notificationPreferences } = req.body;
+        const { name, email, jobTitle, notificationPreferences, companyName } = req.body;
         const user = await User.findById(req.user.userId);
 
         if (!user) {
@@ -191,6 +192,7 @@ exports.updateDetails = async (req, res) => {
         if (name) user.name = name;
         if (email) user.email = email;
         if (jobTitle) user.jobTitle = jobTitle;
+        if (companyName) user.companyName = companyName;
         if (notificationPreferences) {
             // Ensure notificationPreferences exists
             if (!user.notificationPreferences) {
@@ -207,6 +209,17 @@ exports.updateDetails = async (req, res) => {
             if (notificationPreferences.jobStatus !== undefined) {
                 user.notificationPreferences.jobStatus = notificationPreferences.jobStatus;
             }
+        }
+
+        // Sync Company Name with Company Profile
+        if (companyName && user.role === 'company') {
+            await CompanyProfile.findOneAndUpdate(
+                { company: user._id },
+                { $set: { name: companyName } },
+                { upsert: true, setDefaultsOnInsert: true }
+            );
+            // Sync with Jobs
+            await Job.updateMany({ postedBy: user._id }, { company: companyName });
         }
 
         await user.save();

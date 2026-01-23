@@ -17,17 +17,26 @@ const {
     deleteInterview,
     getCompanyProfile,
     updateCompanyProfile,
+    getApplicantDetails,
 
     createJob,
-    updateJob
+    updateJob,
+    getCompanyPublicProfile
 } = require('../controllers/companyController');
 const { protect, authorize } = require('../middleware/auth');
 const uploadImage = require('../middleware/uploadImage');
 
 const router = express.Router();
 
-// All routes protected and restricted to company role
+// Public/Shared Routes (Still Protected by Login)
 router.use(protect);
+
+// @route   GET /api/company/public/:id
+// @desc    Get public company profile (accessible by students)
+// @access  Private (All Roles)
+router.get('/public/:id', getCompanyPublicProfile);
+
+// Company Only Routes
 router.use(authorize('company'));
 
 // @route   GET /api/company/dashboard-stats
@@ -75,7 +84,14 @@ router.get('/applications-stats', getApplicationsStats);
 // @route   GET /api/company/applications
 // @desc    Get all applications for company jobs
 // @access  Private (Company)
+// @desc    Get all applications for company jobs
+// @access  Private (Company)
 router.get('/applications', getCompanyApplications);
+
+// @route   GET /api/company/applications/:id
+// @desc    Get single application details with full student profile
+// @access  Private (Company)
+router.get('/applications/:id', getApplicantDetails);
 
 // @route   PUT /api/company/applications/:id/status
 // @desc    Update application status (Shortlist, Reject, etc.)

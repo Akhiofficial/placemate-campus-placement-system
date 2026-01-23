@@ -98,6 +98,25 @@ const StudentProfileSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    // Experience
+    experience: [{
+        title: String,
+        company: String,
+        location: String,
+        startDate: Date,
+        endDate: Date,
+        current: Boolean,
+        description: String
+    }],
+    // Projects
+    projects: [{
+        title: String,
+        description: String,
+        link: String,
+        technologies: [String],
+        startDate: Date,
+        endDate: Date
+    }],
     // Settings
     notificationPreferences: {
         email: { type: Boolean, default: true },
