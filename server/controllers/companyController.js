@@ -465,7 +465,7 @@ exports.getCompanyApplications = async (req, res) => {
                                 _id: '$jobDetails._id',
                                 title: '$jobDetails.title'
                             },
-                            'degree': '$profileDetails.degree', // e.g. B.Tech
+                            'degree': '$profileDetails.major', // e.g. B.Tech (stored in major)
                             'branch': '$profileDetails.department', // e.g. CS
                             'cgpa': '$profileDetails.cgpa',
                             'skills': '$profileDetails.skills'

@@ -4,7 +4,8 @@ const {
     getPendingAdminRequests,
     approveAdminRequest,
     rejectAdminRequest,
-    getAllAdminRequests
+    getAllAdminRequests,
+    getDashboardStats
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -16,6 +17,9 @@ router.use(authorize('admin'));
 
 // Get pending admin requests
 router.get('/admin-requests', getPendingAdminRequests);
+
+// Get dashboard stats
+router.get('/dashboard-stats', getDashboardStats);
 
 // Get all admin requests (including approved/rejected)
 router.get('/admin-requests/all', getAllAdminRequests);
