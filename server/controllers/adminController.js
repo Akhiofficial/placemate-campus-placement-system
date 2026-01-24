@@ -679,18 +679,24 @@ exports.createJob = async (req, res) => {
             eligibility
         } = req.body;
 
+        console.log("createJob req.body:", req.body); // DEBUG LOG
+
+
         const job = new Job({
             title,
             company, // Text name of company
             description,
-            location,
+            location, // Ensure location is passed
             type,
             salary,
             requirements: Array.isArray(requirements) ? requirements : (requirements ? requirements.split(',').map(s => s.trim()) : []),
             deadline,
             eligibility,
             postedBy: req.user.userId, // Admin is the poster
-            status: 'Open'
+            status: req.body.status ? (req.body.status === 'Active' ? 'Open' : req.body.status) : 'Open',
+            workMode: req.body.workMode,
+            department: req.body.team, // 'team' from frontend -> 'department' in schema
+            tags: req.body.skills ? (Array.isArray(req.body.skills) ? req.body.skills : req.body.skills.split(',').map(s => s.trim())) : []
         });
 
         await job.save();
@@ -790,6 +796,321 @@ exports.updateCompanyStatus = async (req, res) => {
         res.json(company);
     } catch (err) {
         console.error("Error updating company status:", err);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Get Job Page Analytics (Stats, Trends, Popular Roles)
+// @route   GET /api/admin/job-analytics
+// @access  Private (Admin only)
+exports.getJobAnalytics = async (req, res) => {
+    try {
+        // 1. Stats Cards
+        const totalJobs = await Job.countDocuments({});
+        const activeOpenings = await Job.countDocuments({ status: 'Open' });
+        const pendingApproval = await Job.countDocuments({ status: 'Pending' });
+
+        // Total Applications
+        const totalApplications = await Application.countDocuments({});
+
+        // 2. Job Posting Trends (Last 6 Months)
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const trendLabels = [];
+        const trendData = [];
+
+        for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            trendLabels.push(months[d.getMonth()]);
+
+            const start = new Date(d.getFullYear(), d.getMonth(), 1);
+            const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+
+            const count = await Job.countDocuments({
+                createdAt: { $gte: start, $lte: end }
+            });
+            trendData.push(count);
+        }
+
+        // 3. Popular Roles (by Application volume)
+        const popularRolesAgg = await Application.aggregate([
+            {
+                $group: {
+                    _id: '$job',
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 5 },
+            {
+                $lookup: {
+                    from: 'jobs',
+                    localField: '_id',
+                    foreignField: '_id',
+                    as: 'jobDetails'
+                }
+            },
+            { $unwind: '$jobDetails' },
+            {
+                $project: {
+                    role: '$jobDetails.title',
+                    count: 1
+                }
+            }
+        ]);
+
+        const popularRoles = popularRolesAgg.map((item, index) => ({
+            role: item.role,
+            count: item.count,
+            // simplistic logic for demo, calculating % relative to total applications might be small if many other jobs
+            // let's just send count and handle % on UI or here if we want absolute % of total apps
+            percent: totalApplications > 0 ? Math.round((item.count / totalApplications) * 100) : 0,
+            color: ['bg-blue-500', 'bg-indigo-500', 'bg-emerald-500', 'bg-teal-500', 'bg-gray-400'][index] || 'bg-gray-400'
+        }));
+
+        res.json({
+            stats: [
+                { label: 'Total Jobs', value: totalJobs.toString(), subtext: 'Total posted', icon: 'Briefcase', color: 'text-blue-600', bg: 'bg-blue-50 dark:bg-blue-900/20' },
+                { label: 'Active Openings', value: activeOpenings.toString(), subtext: 'Currently live', icon: 'CheckCircle', color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-900/20' },
+                { label: 'Pending Approval', value: pendingApproval.toString(), subtext: 'Needs attention', icon: 'Clock', color: 'text-amber-600', bg: 'bg-amber-50 dark:bg-amber-900/20' },
+                { label: 'Total Applications', value: totalApplications > 1000 ? (totalApplications / 1000).toFixed(1) + 'k' : totalApplications.toString(), subtext: 'All time', icon: 'FileText', color: 'text-purple-600', bg: 'bg-purple-50 dark:bg-purple-900/20' }
+            ],
+            trends: {
+                labels: trendLabels,
+                datasets: [{
+                    label: 'Jobs Posted',
+                    data: trendData,
+                    borderColor: '#3B82F6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)', // simplified for API, UI will handle gradient
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            popularRoles
+        });
+
+    } catch (err) {
+        console.error("Error fetching job analytics:", err);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Get All Jobs for Admin (with filters & pagination)
+// @route   GET /api/admin/jobs-list
+// @access  Private (Admin only)
+exports.getAllJobsAdmin = async (req, res) => {
+    try {
+        const { status, search, company, sort, page = 1, limit = 10 } = req.query;
+
+        const query = {};
+
+        // Filter by Status
+        if (status && status !== 'All Jobs') {
+            if (status === 'Active') query.status = 'Open';
+            else if (status === 'Drafts') query.status = 'Draft';
+            else query.status = status;
+        }
+
+        // Search (Title or Company)
+        if (search) {
+            query.$or = [
+                { title: { $regex: search, $options: 'i' } },
+                { company: { $regex: search, $options: 'i' } } // Assuming company is string in Job model
+            ];
+        }
+
+        // Sort
+        let sortOption = { createdAt: -1 };
+        if (sort === 'oldest') sortOption = { createdAt: 1 };
+
+        const skip = (page - 1) * limit;
+
+        const jobs = await Job.find(query)
+            .sort(sortOption)
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean();
+
+        const total = await Job.countDocuments(query);
+
+        // Enhance with stats (applicants count)
+        const jobsWithStats = await Promise.all(jobs.map(async (job) => {
+            const applicantsCount = await Application.countDocuments({ job: job._id });
+
+            let logo = job.companyLogo;
+            // If no logo, use DiceBear with company name seed
+            if (!logo) logo = `https://api.dicebear.com/7.x/identicon/svg?seed=${encodeURIComponent(job.company)}`;
+
+            return {
+                _id: job._id,
+                id: job._id,
+                title: job.title,
+                company: job.company,
+                type: job.type,
+                location: job.location,
+                posted: new Date(job.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                applicants: applicantsCount,
+                status: job.status === 'Open' ? 'Active' : job.status,
+                statusColor: job.status === 'Open'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                    : job.status === 'Pending'
+                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400'
+                        : 'bg-gray-600 text-gray-100 dark:bg-gray-700 dark:text-gray-300',
+                logo: logo,
+                description: job.description,
+                requirements: job.requirements,
+                salary: job.salary,
+                skills: job.tags ? job.tags.join(', ') : '', // Flatten tags to string for frontend input
+                workMode: job.workMode,
+                deadline: job.deadline,
+                eligibility: job.eligibility,
+                team: job.department // Map department to team for frontend
+            };
+        }));
+
+        res.json({
+            jobs: jobsWithStats,
+            pagination: {
+                total,
+                page: parseInt(page),
+                pages: Math.ceil(total / limit)
+            }
+        });
+
+    } catch (err) {
+        console.error("Error fetching admin jobs:", err);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Delete a Job
+// @route   DELETE /api/admin/jobs/:id
+// @access  Private (Admin only)
+exports.deleteJobAdmin = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+        if (!job) return res.status(404).json({ msg: 'Job not found' });
+
+        await Application.deleteMany({ job: req.params.id });
+        await Job.findByIdAndDelete(req.params.id);
+
+        res.json({ msg: 'Job removed' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Update Job Status
+// @route   PUT /api/admin/jobs/:id/status
+// @access  Private (Admin only)
+exports.updateJobStatusAdmin = async (req, res) => {
+    try {
+        const { status } = req.body;
+
+        let job = await Job.findById(req.params.id);
+        if (!job) return res.status(404).json({ msg: 'Job not found' });
+
+        job.status = status;
+        await job.save();
+
+        res.json(job);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Update Job Details (Admin)
+// @route   PUT /api/admin/jobs/:id
+// @access  Private (Admin only)
+exports.updateJobAdmin = async (req, res) => {
+    try {
+        const {
+            title,
+            company,
+            description,
+            location,
+            type,
+            salary,
+            requirements,
+            deadline,
+            eligibility,
+            status,
+            workMode,
+            skills,
+            team // 'team' might map to 'department' in schema or need new field. Schema has 'department'.
+        } = req.body;
+
+        let job = await Job.findById(req.params.id);
+        if (!job) return res.status(404).json({ msg: 'Job not found' });
+
+        // Update fields
+        if (title) job.title = title;
+        if (company) job.company = company;
+        if (description) job.description = description;
+        if (location) job.location = location;
+        if (type) job.type = type;
+        if (salary) job.salary = salary;
+        if (status) job.status = status === 'Active' ? 'Open' : status;
+        if (workMode) job.workMode = workMode;
+        if (eligibility) job.eligibility = eligibility;
+        if (deadline) job.deadline = deadline;
+
+        // Map 'team' to 'department' if that's the intention, or use department directly
+        if (team) job.department = team; // EditJobModal uses 'team'
+
+        // Handle array fields
+        if (requirements) {
+            job.requirements = Array.isArray(requirements) ? requirements : requirements.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        // Schema has 'tags' but EditJobModal sends 'skills'. Let's save skills to tags or similar.
+        // Job model has 'tags'. Let's map skills string to tags array.
+        if (skills) {
+            job.tags = Array.isArray(skills) ? skills : skills.split(',').map(s => s.trim()).filter(Boolean);
+        }
+
+        await job.save();
+
+        res.json(job);
+    } catch (err) {
+        console.error("Error updating job:", err);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Export Jobs as CSV
+// @route   GET /api/admin/jobs/export
+// @access  Private (Admin only)
+exports.exportJobsCSV = async (req, res) => {
+    try {
+        const jobs = await Job.find().sort({ createdAt: -1 });
+
+        // Simple CSV generation
+        const headers = ['Job ID', 'Title', 'Company', 'Type', 'Status', 'Location', 'Salary', 'Posted Date'];
+        let csvContent = headers.join(',') + '\n';
+
+        jobs.forEach(job => {
+            const row = [
+                job._id,
+                `"${job.title.replace(/"/g, '""')}"`, // Escape quotes
+                `"${job.company.replace(/"/g, '""')}"`,
+                job.type,
+                job.status,
+                `"${job.location ? job.location.replace(/"/g, '""') : ''}"`,
+                `"${job.salary ? job.salary.replace(/"/g, '""') : ''}"`,
+                new Date(job.createdAt).toLocaleDateString()
+            ];
+            csvContent += row.join(',') + '\n';
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=jobs_report.csv');
+        res.status(200).send(csvContent);
+
+    } catch (err) {
+        console.error("Error exporting jobs:", err);
         res.status(500).send('Server error');
     }
 };

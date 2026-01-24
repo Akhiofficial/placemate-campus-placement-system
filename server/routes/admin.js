@@ -17,7 +17,13 @@ const {
     createJob,
     getAllCompanies,
     deleteCompany,
-    updateCompanyStatus
+    updateCompanyStatus,
+    getJobAnalytics,
+    getAllJobsAdmin,
+    deleteJobAdmin,
+    updateJobStatusAdmin,
+    updateJobAdmin,
+    exportJobsCSV
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
 
@@ -32,6 +38,12 @@ router.get('/admin-requests', getPendingAdminRequests);
 
 // Get dashboard stats
 router.get('/dashboard-stats', getDashboardStats);
+
+// Get Job Page Analytics
+router.get('/job-analytics', getJobAnalytics);
+
+// Export Jobs CSV
+router.get('/jobs/export', exportJobsCSV);
 
 // Get all admin requests (including approved/rejected)
 router.get('/admin-requests/all', getAllAdminRequests);
@@ -56,6 +68,18 @@ router.get('/companies', getAllCompanies);
 
 // Create Job (Manual)
 router.post('/jobs', createJob);
+
+// Get All Jobs (List with filters)
+router.get('/jobs-list', getAllJobsAdmin);
+
+// Delete Job
+router.delete('/jobs/:id', deleteJobAdmin);
+
+// Update Job Status
+router.put('/jobs/:id/status', updateJobStatusAdmin);
+
+// Update Job Details
+router.put('/jobs/:id', updateJobAdmin);
 
 // Delete Company
 router.delete('/companies/:id', deleteCompany);

@@ -5,14 +5,15 @@ const EditJobModal = ({ job, onClose, onSave }) => {
     const [formData, setFormData] = useState({
         title: '',
         team: '',
-        type: '',
+        type: 'Full-time', // Default to Full-time
         location: '',
         salary: '',
-        status: '',
+        status: 'Open', // Default to Open
         description: '',
         skills: '',
-        workMode: '',
-        requirements: ''
+        workMode: 'On-site', // Default to On-site
+        requirements: '',
+        company: '' // Ensure company field is tracked
     });
 
     useEffect(() => {
@@ -20,13 +21,13 @@ const EditJobModal = ({ job, onClose, onSave }) => {
             setFormData({
                 title: job.title || '',
                 team: job.team || '',
-                type: job.type || '',
+                type: job.type || 'Full-time',
                 location: job.location || '',
                 salary: job.salary || '',
-                status: job.status || '',
+                status: job.status || 'Open',
                 description: job.description || '',
                 skills: job.skills || '',
-                workMode: job.workMode || '',
+                workMode: job.workMode || 'On-site',
                 requirements: job.requirements || ''
             });
         }
@@ -58,7 +59,7 @@ const EditJobModal = ({ job, onClose, onSave }) => {
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-border">
-                    <h2 className="text-xl font-bold text-foreground">Edit Job Post</h2>
+                    <h2 className="text-xl font-bold text-foreground">{job._id ? 'Edit Job Post' : 'Post New Job'}</h2>
                     <button
                         onClick={onClose}
                         className="p-2 hover:bg-gray-100 dark:hover:bg-background-muted rounded-full transition-colors text-foreground-muted hover:text-foreground"
@@ -104,6 +105,7 @@ const EditJobModal = ({ job, onClose, onSave }) => {
                                     onChange={handleChange}
                                     className="w-full px-3 py-2 bg-white dark:bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                                 >
+                                    <option value="">Select Type</option>
                                     <option value="Full-time">Full-time</option>
                                     <option value="Internship">Internship</option>
                                     <option value="Contract">Contract</option>
@@ -121,6 +123,7 @@ const EditJobModal = ({ job, onClose, onSave }) => {
                                     <option value="Draft">Draft</option>
                                     <option value="Open">Active</option>
                                     <option value="Closed">Closed</option>
+                                    <option value="Pending">Pending</option>
                                 </select>
                             </div>
                         </div>
@@ -146,9 +149,26 @@ const EditJobModal = ({ job, onClose, onSave }) => {
                                     value={formData.location}
                                     onChange={handleChange}
                                     className="w-full px-3 py-2 bg-white dark:bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    required
                                 />
                             </div>
                         </div>
+
+                        {/* Additional field for Company Name (needed for creation if not linked to company user) */}
+                        {!job._id && (
+                            <div className="space-y-1.5">
+                                <label className="text-sm font-medium text-foreground">Company Name</label>
+                                <input
+                                    type="text"
+                                    name="company" // Controller expects 'company'
+                                    value={formData.company || ''}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 bg-white dark:bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                                    placeholder="e.g. Google, Startup Inc."
+                                    required={!job._id}
+                                />
+                            </div>
+                        )}
 
                         <div className="space-y-1.5">
                             <label className="text-sm font-medium text-foreground">Salary Range</label>
@@ -183,6 +203,7 @@ const EditJobModal = ({ job, onClose, onSave }) => {
                                 rows={5}
                                 className="w-full px-3 py-2 bg-white dark:bg-background border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
                                 placeholder="Enter job description..."
+                                required
                             />
                         </div>
 
@@ -215,7 +236,7 @@ const EditJobModal = ({ job, onClose, onSave }) => {
                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-semibold shadow-sm transition-colors"
                     >
                         <Save size={16} />
-                        Save Changes
+                        {job._id ? 'Save Changes' : 'Post Job'}
                     </button>
                 </div>
             </div>
