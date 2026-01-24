@@ -11,6 +11,7 @@ import {
     Sun,
     X,
     Settings,
+    ShieldCheck
 } from "lucide-react";
 import { useTheme } from "../../context/ThemeContext";
 
@@ -44,6 +45,23 @@ const SidebarContent = ({ theme, toggleTheme, onClose }) => (
 
             {/* Menu */}
             <nav className="space-y-1 px-4 mt-2">
+                {/* Super Admin Only Link */}
+                {JSON.parse(localStorage.getItem('user'))?.role === 'superadmin' && (
+                    <NavLink
+                        to="/admin/requests"
+                        onClick={onClose}
+                        className={({ isActive }) =>
+                            `flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                                : "text-foreground-muted hover:bg-background-muted hover:text-foreground"
+                            }`
+                        }
+                    >
+                        <ShieldCheck size={18} />
+                        Subadmin Approval
+                    </NavLink>
+                )}
+
                 {menuItems.map(({ name, path, icon: Icon }) => (
                     <NavLink
                         key={name}
@@ -89,7 +107,14 @@ const SidebarContent = ({ theme, toggleTheme, onClose }) => (
             </NavLink>
 
             {/* Log Out */}
-            <button className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer group">
+            <button
+                onClick={() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/';
+                }}
+                className="flex items-center gap-3 w-full px-4 py-2.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer group"
+            >
                 <LogOut size={20} className="group-hover:scale-110 transition-transform" />
                 Logout
             </button>

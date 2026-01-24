@@ -8,7 +8,7 @@ const router = express.Router();
 
 // All routes are protected and for students only
 router.use(protect);
-router.use(authorize('student'));
+router.use(authorize('student', 'superadmin', 'admin'));
 
 router.get('/dashboard', getDashboard);
 router.get('/profile', getProfile);

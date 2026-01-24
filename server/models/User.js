@@ -26,7 +26,7 @@ const UserSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['student', 'company', 'admin'],
+        enum: ['student', 'company', 'admin', 'superadmin'],
         default: 'student',
     },
     jobTitle: {
@@ -44,6 +44,10 @@ const UserSchema = new mongoose.Schema({
             // Auto-approve student and company, require approval for admin
             return this.role !== 'admin';
         },
+    },
+    isBlocked: {
+        type: Boolean,
+        default: false
     },
     approvedBy: {
         type: mongoose.Schema.Types.ObjectId,

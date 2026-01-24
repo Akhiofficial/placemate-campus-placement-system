@@ -3,7 +3,8 @@ import {
     Search,
     Plus,
     Bell,
-    TrendingUp
+    TrendingUp,
+    Loader2
 } from 'lucide-react';
 import {
     Chart as ChartJS,
@@ -19,6 +20,7 @@ import {
 } from 'chart.js';
 import { Bar, Line } from 'react-chartjs-2';
 import axios from '../../api/axios'; // Import centralized axios instance
+import toast from 'react-hot-toast';
 
 ChartJS.register(
     CategoryScale,
@@ -38,6 +40,9 @@ const AdminDashboard = () => {
     const [offersData, setOffersData] = useState(null);
     const [recentJobs, setRecentJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+
+    const [isAddJobOpen, setIsAddJobOpen] = useState(false);
+    const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -88,7 +93,11 @@ const AdminDashboard = () => {
                         ...job,
                         statusColor,
                         // use a default logo if none provided
-                        logo: job.companyLogo || `https://api.dicebear.com/7.x/identicon/svg?seed=${job.company}`
+                        logo: job.companyLogo
+                            ? (job.companyLogo.startsWith('http') || job.companyLogo.startsWith('data:')
+                                ? job.companyLogo
+                                : `http://localhost:5000/${job.companyLogo.startsWith('/') ? job.companyLogo.slice(1) : job.companyLogo}`)
+                            : `https://api.dicebear.com/7.x/identicon/svg?seed=${job.company}`
                     };
                 });
                 setRecentJobs(processedJobs);
@@ -142,7 +151,11 @@ const AdminDashboard = () => {
     };
 
     if (loading) {
-        return <div className="p-8 text-center">Loading dashboard...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+            </div>
+        );
     }
 
     return (
@@ -163,11 +176,11 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                    <button onClick={() => setIsAddJobOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
                         <Plus size={18} />
                         Add Job
                     </button>
-                    <button className="flex items-center gap-2 bg-white dark:bg-card border border-gray-200 dark:border-border text-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-accent transition-colors">
+                    <button onClick={() => setIsAddCompanyOpen(true)} className="flex items-center gap-2 bg-white dark:bg-card border border-gray-200 dark:border-border text-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-accent transition-colors">
                         Add Company
                     </button>
                     <button className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-accent rounded-full transition-colors relative">
@@ -262,7 +275,15 @@ const AdminDashboard = () => {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-lg bg-white border border-gray-100 p-1 flex items-center justify-center">
-                                                <img src={job.logo} alt={job.company} className="w-full h-full object-contain" />
+                                                <img
+                                                    src={job.logo}
+                                                    alt={job.company}
+                                                    className="w-full h-full object-contain"
+                                                    onError={(e) => {
+                                                        e.target.onerror = null; // Prevent infinite loop
+                                                        e.target.src = `https://api.dicebear.com/7.x/identicon/svg?seed=${job.company}`;
+                                                    }}
+                                                />
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-foreground text-sm">{job.company}</p>
@@ -270,7 +291,7 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-foreground font-medium">{job.role}</td>
+                                    <td className="px-6 py-4 text-sm text-foreground font-medium">{job.title}</td>
                                     <td className="px-6 py-4 text-sm text-gray-500">{job.date}</td>
                                     <td className="px-6 py-4">
                                         <div className="flex -space-x-2">
@@ -298,6 +319,322 @@ const AdminDashboard = () => {
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <AddJobModal isOpen={isAddJobOpen} onClose={() => setIsAddJobOpen(false)} onAdd={() => {
+                toast.success("Job posted successfully");
+                // Optionally trigger a refresh if needed, but not critical for MVP
+            }} />
+
+            <AddCompanyModal isOpen={isAddCompanyOpen} onClose={() => setIsAddCompanyOpen(false)} onAdd={() => {
+                toast.success("Company added successfully");
+            }} />
+        </div>
+    );
+};
+
+const AddJobModal = ({ isOpen, onClose, onAdd }) => {
+    const [formData, setFormData] = useState({
+        title: '',
+        company: '',
+        description: '',
+        location: '',
+        type: 'Full-time',
+        salary: '',
+        requirements: '',
+        deadline: '',
+        eligibility: ''
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await axios.post('/admin/jobs', formData);
+            toast.success("Job posted successfully");
+            onAdd();
+            onClose();
+            setFormData({ title: '', company: '', description: '', location: '', type: 'Full-time', salary: '', requirements: '', deadline: '', eligibility: '' });
+        } catch (err) {
+            console.error("Error creating job:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card w-full max-w-2xl rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+                <div className="p-6 border-b border-border flex items-center justify-between shrink-0">
+                    <div>
+                        <h3 className="text-xl font-bold text-foreground">Post New Job</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Create a new job listing for students</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors"
+                    >
+                        <Plus className="w-5 h-5 rotate-45" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground ml-1">Job Title</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                                placeholder="e.g. Senior Frontend Engineer"
+                                value={formData.title}
+                                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground ml-1">Company Name</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                                placeholder="e.g. Google"
+                                value={formData.company}
+                                onChange={e => setFormData({ ...formData, company: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1">Description</label>
+                        <textarea
+                            required
+                            className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all min-h-[120px] placeholder:text-muted-foreground/50 text-foreground resize-none"
+                            placeholder="Detailed job description..."
+                            value={formData.description}
+                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground ml-1">Location</label>
+                            <input
+                                required
+                                type="text"
+                                className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                                placeholder="e.g. Bangalore, Remote"
+                                value={formData.location}
+                                onChange={e => setFormData({ ...formData, location: e.target.value })}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground ml-1">Type</label>
+                            <div className="relative">
+                                <select
+                                    className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all appearance-none text-foreground cursor-pointer"
+                                    value={formData.type}
+                                    onChange={e => setFormData({ ...formData, type: e.target.value })}
+                                >
+                                    <option>Full-time</option>
+                                    <option>Internship</option>
+                                    <option>Contract</option>
+                                </select>
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-muted-foreground">
+                                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground ml-1">Salary</label>
+                            <input
+                                type="text"
+                                className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                                value={formData.salary}
+                                onChange={e => setFormData({ ...formData, salary: e.target.value })}
+                                placeholder="e.g. 12-15 LPA"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-muted-foreground ml-1">Deadline</label>
+                            <input
+                                type="date"
+                                className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all text-foreground [scheme:dark]"
+                                value={formData.deadline}
+                                onChange={e => setFormData({ ...formData, deadline: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1">Requirements</label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                            value={formData.requirements}
+                            onChange={e => setFormData({ ...formData, requirements: e.target.value })}
+                            placeholder="e.g. React, Node.js, MongoDB (comma separated)"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1">Eligibility</label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                            value={formData.eligibility}
+                            onChange={e => setFormData({ ...formData, eligibility: e.target.value })}
+                            placeholder="e.g. B.Tech CSE / MCA 2024 Batch"
+                        />
+                    </div>
+
+                    <div className="pt-4 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-6 py-2.5 border border-border rounded-xl text-foreground font-medium hover:bg-accent transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-600/20"
+                        >
+                            {loading ? 'Posting...' : 'Post Job'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const AddCompanyModal = ({ isOpen, onClose, onAdd }) => {
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        location: '',
+        website: ''
+    });
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            await axios.post('/admin/companies', formData);
+            toast.success("Company added successfully");
+            onAdd();
+            onClose();
+            setFormData({ name: '', email: '', password: '', location: '', website: '' });
+        } catch (err) {
+            console.error("Error creating company:", err);
+            console.log("Server Error Response:", err.response?.data);
+            toast.error(err.response?.data?.msg || "Failed to create company");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-card w-full max-w-md rounded-2xl shadow-2xl border border-white/10 flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-200">
+                <div className="p-6 border-b border-border flex items-center justify-between shrink-0">
+                    <div>
+                        <h3 className="text-xl font-bold text-foreground">Add New Company</h3>
+                        <p className="text-sm text-muted-foreground mt-1">Register a company partner</p>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-full transition-colors"
+                    >
+                        <Plus className="w-5 h-5 rotate-45" />
+                    </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1">Company Name</label>
+                        <input
+                            required
+                            type="text"
+                            className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                            value={formData.name}
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            placeholder="e.g. Microsoft"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1">Email (Login ID)</label>
+                        <input
+                            required
+                            type="email"
+                            className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                            value={formData.email}
+                            onChange={e => setFormData({ ...formData, email: e.target.value })}
+                            placeholder="hr@microsoft.com"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1">Password</label>
+                        <input
+                            required
+                            type="password"
+                            className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                            value={formData.password}
+                            onChange={e => setFormData({ ...formData, password: e.target.value })}
+                            placeholder="••••••••"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1">Location</label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                            value={formData.location}
+                            onChange={e => setFormData({ ...formData, location: e.target.value })}
+                            placeholder="Headquarters City"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-muted-foreground ml-1">Website</label>
+                        <input
+                            type="text"
+                            className="w-full px-4 py-3 bg-secondary/50 border-0 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none transition-all placeholder:text-muted-foreground/50 text-foreground"
+                            value={formData.website}
+                            onChange={e => setFormData({ ...formData, website: e.target.value })}
+                            placeholder="https://example.com"
+                        />
+                    </div>
+
+                    <div className="pt-4 flex justify-end gap-3">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="px-6 py-2.5 border border-border rounded-xl text-foreground font-medium hover:bg-accent transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-600/20"
+                        >
+                            {loading ? 'Adding...' : 'Add Company'}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );

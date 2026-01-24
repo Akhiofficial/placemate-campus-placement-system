@@ -55,11 +55,12 @@ const LoginForm = () => {
             localStorage.setItem('user', JSON.stringify(user));
 
             // Redirect based on role
+            // Redirect based on role
             if (user.role === 'student') {
                 navigate('/student/dashboard');
             } else if (user.role === 'company') {
                 navigate('/company/dashboard');
-            } else if (user.role === 'admin') {
+            } else if (user.role === 'admin' || user.role === 'superadmin') {
                 navigate('/admin/dashboard');
             } else {
                 navigate('/student/dashboard');

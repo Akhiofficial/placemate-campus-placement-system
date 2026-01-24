@@ -31,6 +31,7 @@ import AdminStudents from './pages/admin/AdminStudents'
 import AdminCompanies from './pages/admin/AdminCompanies'
 import AdminJobs from './pages/admin/AdminJobs'
 import AdminApplications from './pages/admin/AdminApplications'
+import SuperAdminRequests from './pages/admin/SuperAdminRequests' // Import
 
 import AdminSettings from './pages/admin/AdminSettings'
 
@@ -76,6 +77,7 @@ const App = () => {
             <Route path="/admin/companies" element={<AdminCompanies />} />
             <Route path="/admin/jobs" element={<AdminJobs />} />
             <Route path="/admin/applications" element={<AdminApplications />} />
+            <Route path="/admin/requests" element={<SuperAdminRequests />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
         </Routes>

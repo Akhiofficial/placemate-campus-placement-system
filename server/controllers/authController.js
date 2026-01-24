@@ -106,14 +106,28 @@ exports.login = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid credentials' });
         }
 
-        // Verify role if provided
-        if (role && user.role !== role) {
-            return res.status(403).json({
-                msg: `Access denied. You are registered as a ${user.role}, not a ${role}.`
-            });
+        // Check if user is blocked
+        if (user.isBlocked) {
+            return res.status(403).json({ msg: 'Your account has been blocked. Please contact the administrator.' });
         }
 
-        // Check if admin is approved
+        // Auto-promote Super Admin based on email
+        if (email === 'superadmin@placemate.com' && user.role !== 'superadmin') {
+            user.role = 'superadmin';
+            await user.save();
+        }
+
+        // Verify role if provided
+        if (role && user.role !== role) {
+            // Allow superadmin to login as admin
+            if (!(user.role === 'superadmin' && role === 'admin')) {
+                return res.status(403).json({
+                    msg: `Access denied. You are registered as a ${user.role}, not a ${role}.`
+                });
+            }
+        }
+
+        // Check if admin is approved (skip for superadmin)
         if (user.role === 'admin' && !user.isApproved) {
             return res.status(403).json({
                 msg: 'Admin account is pending approval. Please wait for Super Admin to activate your account.'
