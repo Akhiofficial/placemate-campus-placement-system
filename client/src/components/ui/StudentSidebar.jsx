@@ -38,6 +38,12 @@ const SidebarContent = ({ theme, toggleTheme, onClose, studentData }) => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
     navigate('/');
   };
 

@@ -78,10 +78,17 @@ const MyInterviews = () => {
             const url = window.URL.createObjectURL(new Blob([response.data]));
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', 'interviews.ics');
+            link.setAttribute('download', 'placemate-interviews.ics');
             document.body.appendChild(link);
             link.click();
             link.remove();
+
+            // Automatically open Google Calendar Import page
+            // We use a small timeout to ensure the download has initiated visually
+            setTimeout(() => {
+                window.open("https://calendar.google.com/calendar/u/0/r/settings/export", "_blank");
+            }, 500);
+
         } catch (error) {
             console.error("Error syncing calendar:", error);
             alert("Failed to sync calendar");
@@ -299,31 +306,7 @@ const MyInterviews = () => {
                                                 /* Virtual Interview Logic */
                                                 (() => {
                                                     const isCompletedOrCancelled = interview.status === 'Completed' || interview.status === 'Cancelled';
-
-                                                    // Check if it's joinable (e.g., 10 mins before start)
-                                                    let isTimeValid = false;
-                                                    try {
-                                                        const interviewDate = new Date(interview.date);
-                                                        // Parse time "HH:MM AM/PM"
-                                                        const timeString = interview.time || "00:00";
-                                                        const [time, modifier] = timeString.split(' ');
-                                                        let [hours, minutes] = time.split(':');
-                                                        if (hours === '12') hours = '00';
-                                                        if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
-
-                                                        const interviewDateTime = new Date(interviewDate);
-                                                        interviewDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-                                                        const now = new Date();
-                                                        // Allow joining 10 mins before
-                                                        if (now >= new Date(interviewDateTime.getTime() - 10 * 60000)) {
-                                                            isTimeValid = true;
-                                                        }
-                                                    } catch (e) {
-                                                        // invalid date
-                                                    }
-
-                                                    const canJoin = !isCompletedOrCancelled && interview.meetingLink && isTimeValid;
+                                                    const canJoin = !isCompletedOrCancelled && interview.meetingLink;
 
                                                     return (
                                                         <a
@@ -343,7 +326,41 @@ const MyInterviews = () => {
                                                 })()
                                             )}
 
-                                            {/* Details Button (Always second) */}
+                                            {/* Google Calendar Button */}
+                                            <a
+                                                href={`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Interview: ${interview.company} - ${interview.role}`)}&details=${encodeURIComponent(`Round: ${interview.round}\nLink: ${interview.meetingLink || 'N/A'}`)}&location=${encodeURIComponent(interview.platform || 'Virtual')}&dates=${(() => {
+                                                    // Parse date and time to YYYYMMDDTHHMMSSZ format
+                                                    // This is simplified client-side parsing
+                                                    try {
+                                                        const d = new Date(interview.date);
+                                                        let hours = 9, minutes = 0;
+                                                        if (interview.time) {
+                                                            const parts = interview.time.match(/(\d+):(\d+)\s*(AM|PM)?/i);
+                                                            if (parts) {
+                                                                let h = parseInt(parts[1]);
+                                                                let m = parseInt(parts[2]);
+                                                                if (parts[3]?.toUpperCase() === 'PM' && h < 12) h += 12;
+                                                                if (parts[3]?.toUpperCase() === 'AM' && h === 12) h = 0;
+                                                                hours = h;
+                                                                minutes = m;
+                                                            }
+                                                        }
+                                                        d.setHours(hours, minutes, 0, 0);
+                                                        const start = d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+                                                        d.setHours(hours + 1);
+                                                        const end = d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+                                                        return `${start}/${end}`;
+                                                    } catch (e) { return ""; }
+                                                })()}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="p-2.5 bg-background border border-border text-foreground-muted hover:text-blue-600 rounded-xl hover:bg-background-muted transition flex items-center justify-center"
+                                                title="Add to Google Calendar"
+                                            >
+                                                <Calendar size={18} />
+                                            </a>
+
+                                            {/* Details Button (Always last) */}
                                             <button
                                                 onClick={() => setSelectedInterview(interview)}
                                                 className="flex-1 md:flex-none px-4 py-2.5 bg-background border border-border text-foreground rounded-xl font-medium hover:bg-background-muted transition text-sm flex items-center justify-center gap-2"

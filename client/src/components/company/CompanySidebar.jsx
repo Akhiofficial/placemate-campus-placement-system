@@ -28,7 +28,11 @@ const SidebarContent = ({ theme, toggleTheme, onClose, user }) => {
     const handleLogout = () => {
         if (window.confirm("Are you sure you want to log out?")) {
             localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
             localStorage.removeItem("userRole");
+            sessionStorage.removeItem("userRole");
+            localStorage.removeItem("user");
+            sessionStorage.removeItem("user");
             navigate("/");
         }
     };

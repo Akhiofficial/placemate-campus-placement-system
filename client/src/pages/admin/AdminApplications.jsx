@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { updateApplicationStatus } from '../../api/adminApi';
-import axios from 'axios';
+import api from '../../api/axios';
 import {
     Search,
     FileText,
@@ -91,9 +91,7 @@ const AdminApplications = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const res = await axios.get('http://localhost:5000/api/admin/application-stats', {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get('/admin/application-stats');
             const { stats, statusDistribution, companyDemand } = res.data;
 
             setStats(stats);
@@ -140,9 +138,7 @@ const AdminApplications = () => {
                 queryParams.append('endDate', endDate);
             }
 
-            const res = await axios.get(`http://localhost:5000/api/admin/applications?${queryParams.toString()}`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-            });
+            const res = await api.get(`/admin/applications?${queryParams.toString()}`);
 
             const formattedApps = res.data.map((app) => ({
                 id: app._id,
@@ -197,9 +193,8 @@ const AdminApplications = () => {
 
     const handleExport = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/admin/applications/export', {
-                responseType: 'blob',
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            const response = await api.get('/admin/applications/export', {
+                responseType: 'blob'
             });
 
             const url = window.URL.createObjectURL(new Blob([response.data]));

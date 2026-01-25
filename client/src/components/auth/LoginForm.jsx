@@ -11,6 +11,7 @@ const LoginForm = () => {
     const navigate = useNavigate();
     const [role, setRole] = useState('student');
     const [showPassword, setShowPassword] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false); // Added state
     const [formData, setFormData] = useState({
         email: '',
         password: ''
@@ -50,11 +51,15 @@ const LoginForm = () => {
 
             const { token, user } = response.data;
 
-            // Store auth data
-            localStorage.setItem('token', token);
-            localStorage.setItem('user', JSON.stringify(user));
+            // Store auth data based on Remember Me
+            if (rememberMe) {
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(user));
+            } else {
+                sessionStorage.setItem('token', token);
+                sessionStorage.setItem('user', JSON.stringify(user));
+            }
 
-            // Redirect based on role
             // Redirect based on role
             if (user.role === 'student') {
                 navigate('/student/dashboard');
@@ -178,7 +183,12 @@ const LoginForm = () => {
 
                 <div className="flex items-center justify-between">
                     <label className="flex items-center gap-2 cursor-pointer group">
-                        <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                        <input
+                            type="checkbox"
+                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                        />
                         <span className="text-sm text-gray-500 group-hover:text-gray-700">Remember me</span>
                     </label>
                     <button
