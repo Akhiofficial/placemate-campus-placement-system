@@ -21,6 +21,7 @@ const {
 
     createJob,
     updateJob,
+    deleteJob,
     getCompanyPublicProfile
 } = require('../controllers/companyController');
 const { protect, authorize } = require('../middleware/auth');
@@ -53,6 +54,11 @@ router.post('/jobs', createJob);
 // @desc    Update a job posting
 // @access  Private (Company)
 router.put('/jobs/:id', updateJob);
+
+// @route   DELETE /api/company/jobs/:id
+// @desc    Delete a job posting
+// @access  Private (Company)
+router.delete('/jobs/:id', deleteJob);
 
 // @route   GET /api/company/recent-postings
 // @desc    Get recent job postings for company dashboard

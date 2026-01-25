@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Briefcase, DollarSign, Clock, Building, Calendar, CheckCircle, Eye } from "lucide-react";
+import { ArrowLeft, MapPin, Briefcase, DollarSign, Clock, Building, Calendar, CheckCircle, Eye, IndianRupee } from "lucide-react";
 import api from "../../api/axios";
 
 const JobDetails = () => {
@@ -178,12 +178,12 @@ const JobDetails = () => {
                                 <div className="space-y-4">
                                     <div className="flex items-start gap-3">
                                         <div className="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                                            <DollarSign size={20} />
+                                            <IndianRupee size={20} />
                                         </div>
                                         <div>
                                             <p className="text-sm text-foreground-muted mb-0.5">Salary</p>
                                             <p className="font-medium text-foreground">
-                                                {job.salary || `${job.salaryMin} - ${job.salaryMax}` || "Not Disclosed"}
+                                                {job.salary ? job.salary.replace(/\$/g, '₹').replace('/ year', 'LPA') : `${job.salaryMin} - ${job.salaryMax} LPA` || "Not Disclosed"}
                                             </p>
                                         </div>
                                     </div>

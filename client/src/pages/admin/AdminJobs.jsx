@@ -163,7 +163,7 @@ const AdminJobs = () => {
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure you want to delete this job?")) return;
-        console.log("Attempting to delete job with ID:", id);
+
         try {
             await deleteJob(id);
             toast.success("Job deleted successfully");
@@ -175,15 +175,13 @@ const AdminJobs = () => {
         }
     };
 
+
     const handleSaveJob = async (jobData) => {
-        console.log("Saving job data:", jobData);
         try {
             if (jobData._id) {
-                console.log("Updating existing job:", jobData._id);
                 await updateJob(jobData._id, jobData);
                 toast.success("Job updated successfully");
             } else {
-                console.log("Creating new job");
                 await createJob(jobData);
                 toast.success("Job posted successfully");
             }
@@ -310,20 +308,27 @@ const AdminJobs = () => {
                         <button className="text-xs text-blue-600 font-medium hover:underline">View Report</button>
                     </div>
                     <div className="space-y-5">
-                        {popularRoles.map((item, index) => (
-                            <div key={index}>
-                                <div className="flex justify-between text-sm mb-1.5">
-                                    <span className="font-medium text-foreground">{item.role}</span>
-                                    <span className="text-muted-foreground text-xs">{item.percent}%</span>
+                        {popularRoles.map((item, index) => {
+                            const percent = Math.max(5, Math.min(100, Number(item.percent) || 0)); // Min 5% for visibility checking
+                            // Define colors locally so Tailwind JIT picks them up
+                            const COLORS = ['bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-orange-600', 'bg-pink-600'];
+                            const color = COLORS[index % COLORS.length];
+
+                            return (
+                                <div key={index}>
+                                    <div className="flex justify-between text-sm mb-1.5">
+                                        <span className="font-medium text-foreground">{item.role}</span>
+                                        <span className="text-muted-foreground text-xs">{item.percent}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
+                                        <div
+                                            className={`${color} h-1.5 rounded-full transition-all duration-500`}
+                                            style={{ width: `${percent}%` }}
+                                        ></div>
+                                    </div>
                                 </div>
-                                <div className="w-full bg-gray-100 dark:bg-gray-700 rounded-full h-1.5">
-                                    <div
-                                        className={`${item.color} h-1.5 rounded-full`}
-                                        style={{ width: `${item.percent}%` }}
-                                    ></div>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                         {popularRoles.length === 0 && <p className="text-sm text-muted-foreground text-center">No application data yet</p>}
                     </div>
                 </div>
@@ -388,7 +393,12 @@ const AdminJobs = () => {
                                             <td className="p-4 pl-6">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 dark:border-gray-700 p-1 flex items-center justify-center">
-                                                        <img src={job.logo} alt={job.company} className="w-full h-full object-contain" />
+                                                        <img
+                                                            src={job.logo && job.logo.startsWith('http') ? job.logo : `http://localhost:5000${job.logo}`}
+                                                            alt={job.company}
+                                                            className="w-full h-full object-contain"
+                                                            onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerText = job.company?.charAt(0).toUpperCase() || 'C'; }}
+                                                        />
                                                     </div>
                                                     <div>
                                                         <div className="font-semibold text-foreground text-sm">{job.title}</div>

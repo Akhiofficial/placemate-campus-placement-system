@@ -13,6 +13,14 @@ const UserSchema = new mongoose.Schema({
         type: String,
         trim: true,
     },
+    employeeId: {
+        type: String,
+        trim: true,
+    },
+    profileImage: {
+        type: String,
+        default: ''
+    },
     email: {
         type: String,
         required: true,

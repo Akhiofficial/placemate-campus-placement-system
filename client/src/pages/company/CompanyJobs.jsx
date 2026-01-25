@@ -6,7 +6,7 @@ import JobFilters from '../../components/company/jobs/JobFilters';
 import JobCard from '../../components/company/jobs/JobCard';
 import JobDetailsModal from '../../components/company/jobs/JobDetailsModal';
 import EditJobModal from '../../components/company/jobs/EditJobModal';
-import { getCompanyJobs, getJobPostingsStats, updateJob } from '../../api/companyApi';
+import { getCompanyJobs, getJobPostingsStats, updateJob, deleteJob } from '../../api/companyApi';
 
 const CompanyJobs = () => {
     const [jobs, setJobs] = useState([]);
@@ -67,7 +67,7 @@ const CompanyJobs = () => {
 
     const handlePublishJob = (id) => {
         // Placeholder for publish API call
-        console.log("Publishing job", id);
+
         // Optimistic update
         setJobs(jobs.map(job =>
             job.id === id ? { ...job, status: 'Open' } : job
@@ -76,7 +76,7 @@ const CompanyJobs = () => {
 
     const handleSaveJob = async (updatedJob) => {
         try {
-            console.log("Saving job", updatedJob);
+
 
             // Map frontend UpdateJob data structure back to backend API payload
             // Note: updatedJob comes from EditJobModal which has fields: title, team, type, location, salary, status, description, skills, workMode, requirements
@@ -136,6 +136,22 @@ const CompanyJobs = () => {
         } catch (error) {
             console.error("Failed to update job:", error);
             alert("Failed to save changes. Please try again.");
+        }
+    };
+
+    const handleDeleteJob = async (id) => {
+        if (!window.confirm("Are you sure you want to delete this job posting? This action cannot be undone.")) {
+            return;
+        }
+
+        try {
+            await deleteJob(id);
+            // Remove from state
+            setJobs(jobs.filter(job => job.id !== id));
+            // Update stats if needed (optional, or just decrement)
+        } catch (error) {
+            console.error("Failed to delete job:", error);
+            alert("Failed to delete job. Please try again.");
         }
     };
 
@@ -202,6 +218,7 @@ const CompanyJobs = () => {
                         onPublish={() => handlePublishJob(job.id)}
                         onView={() => setViewJob(job)}
                         onEdit={() => setEditJob(job)}
+                        onDelete={() => handleDeleteJob(job.id)}
                     />
                 ))}
                 {jobs.length === 0 && (

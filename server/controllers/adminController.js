@@ -2,9 +2,13 @@
 const User = require('../models/User');
 const AdminRequest = require('../models/AdminRequest');
 const Application = require('../models/Application');
-const Job = require('../models/Job');
-const StudentProfile = require('../models/StudentProfile');
 const CompanyProfile = require('../models/CompanyProfile');
+const StudentProfile = require('../models/StudentProfile');
+const Job = require('../models/Job'); // Kept from original
+const SystemSettings = require('../models/SystemSettings');
+const Notification = require('../models/Notification');
+const mongoose = require('mongoose'); // Kept from original
+const crypto = require('crypto');
 
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/dashboard-stats
@@ -17,7 +21,7 @@ exports.getDashboardStats = async (req, res) => {
 
         // Total Offers & Placed Students
         // Assuming 'Offer' status means placed.
-        const offers = await Application.find({ status: 'Offer' }).populate('job');
+        const offers = await Application.find({ status: { $in: ['Offer', 'Hired'] } }).populate('job');
         const totalOffers = offers.length;
 
         // Count unique students with offers
@@ -31,7 +35,23 @@ exports.getDashboardStats = async (req, res) => {
 
         offers.forEach(app => {
             if (app.job) {
-                const avgJobPackage = (app.job.salaryMin + app.job.salaryMax) / 2;
+                let avgJobPackage = 0;
+                // Try min/max first (saved as numbers)
+                if ((app.job.salaryMin > 0 || app.job.salaryMax > 0)) {
+                    avgJobPackage = (app.job.salaryMin + app.job.salaryMax) / 2;
+                }
+                // Fallback: Parse string if min/max are missing (e.g. old jobs)
+                else if (app.job.salary) {
+                    // Extract numbers from string (e.g. "6-9 LPA", "$5000", "12 LPA")
+                    const numbers = app.job.salary.match(/(\d+(\.\d+)?)/g);
+                    if (numbers && numbers.length > 0) {
+                        const nums = numbers.map(n => parseFloat(n));
+                        // If multiple numbers (range), average them. If single, use it.
+                        const sum = nums.reduce((a, b) => a + b, 0);
+                        avgJobPackage = sum / nums.length;
+                    }
+                }
+
                 if (!isNaN(avgJobPackage) && avgJobPackage > 0) {
                     totalPackage += avgJobPackage;
                     packageCount++;
@@ -67,7 +87,7 @@ exports.getDashboardStats = async (req, res) => {
         sixMonthsAgo.setDate(1); // Start of that month
 
         const recentOffers = await Application.find({
-            status: 'Offer',
+            status: { $in: ['Offer', 'Hired'] },
             createdAt: { $gte: sixMonthsAgo }
         }).sort('createdAt');
 
@@ -619,10 +639,10 @@ exports.createCompany = async (req, res) => {
         const { name, email, password, location, website } = req.body;
 
         // 1. Check if user exists
-        console.log(`[createCompany] Checking for user with email: '${email}'`);
+
         let user = await User.findOne({ email });
         if (user) {
-            console.log(`[createCompany] Found existing user: ID=${user._id}, Role=${user.role}, Email=${user.email}`);
+
             return res.status(400).json({ msg: `User already exists (Role: ${user.role})` });
         }
 
@@ -679,7 +699,7 @@ exports.createJob = async (req, res) => {
             eligibility
         } = req.body;
 
-        console.log("createJob req.body:", req.body); // DEBUG LOG
+
 
 
         const job = new Job({
@@ -1111,6 +1131,473 @@ exports.exportJobsCSV = async (req, res) => {
 
     } catch (err) {
         console.error("Error exporting jobs:", err);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Get Application Stats (Admin)
+// @route   GET /api/admin/application-stats
+// @access  Private (Admin only)
+exports.getApplicationStats = async (req, res) => {
+    try {
+        const totalApplications = await Application.countDocuments();
+        const pendingReview = await Application.countDocuments({ status: { $in: ['Applied', 'Shortlisted'] } });
+
+        // Count interviews scheduled for next 7 days
+        const nextWeek = new Date();
+        nextWeek.setDate(nextWeek.getDate() + 7);
+        const interviewsScheduled = await Application.countDocuments({
+            status: 'Interview',
+            interviewDate: {
+                $gte: new Date(),
+                $lte: nextWeek
+            }
+        });
+
+        const placedCandidates = await Application.countDocuments({ status: 'Hired' });
+
+        // Status Distribution
+        const statusDistribution = await Application.aggregate([
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Top Companies Demand
+        const companyDemand = await Application.aggregate([
+            {
+                $lookup: {
+                    from: 'jobs',
+                    localField: 'job',
+                    foreignField: '_id',
+                    as: 'jobDetails'
+                }
+            },
+            {
+                $unwind: { path: '$jobDetails', preserveNullAndEmptyArrays: true }
+            },
+            {
+                $group: {
+                    _id: { $ifNull: ['$jobDetails.company', 'Unknown'] },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { count: -1 } },
+            { $limit: 4 }
+        ]);
+
+        res.json({
+            stats: {
+                totalApplications,
+                pendingReview,
+                interviewsScheduled,
+                placedCandidates
+            },
+            statusDistribution,
+            companyDemand
+        });
+
+    } catch (error) {
+        console.error('Error fetching application stats:', error);
+        res.status(500).json({ message: 'Server error fetching application stats' });
+    }
+};
+
+// @desc    Get All Applications extended (Admin)
+// @route   GET /api/admin/applications
+// @access  Private (Admin only)
+exports.getAllApplications = async (req, res) => {
+    try {
+        const { search, status, company, sort, startDate, endDate } = req.query;
+        let query = {};
+
+        // Build Aggregate Pipeline
+        const pipeline = [
+            // Lookup Student User (for name)
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'student',
+                    foreignField: '_id',
+                    as: 'studentUser'
+                }
+            },
+            { $unwind: { path: '$studentUser', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'studentprofiles',
+                    localField: 'student',
+                    foreignField: 'user',
+                    as: 'studentProfile'
+                }
+            },
+            { $unwind: { path: '$studentProfile', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'jobs',
+                    localField: 'job',
+                    foreignField: '_id',
+                    as: 'job'
+                }
+            },
+            { $unwind: { path: '$job', preserveNullAndEmptyArrays: true } }
+        ];
+
+        // Match Stage
+        let matchStage = {};
+
+        if (status && status !== 'All Statuses') {
+            matchStage['status'] = status;
+        }
+
+        if (company && company !== 'All Companies') {
+            matchStage['job.company'] = company;
+        }
+
+        if (startDate && endDate) {
+            matchStage['createdAt'] = {
+                $gte: new Date(startDate),
+                $lte: new Date(endDate)
+            };
+        }
+
+        if (search) {
+            matchStage['$or'] = [
+                { 'studentUser.name': { $regex: search, $options: 'i' } },
+                { 'studentProfile.universityRollNo': { $regex: search, $options: 'i' } },
+                { 'job.title': { $regex: search, $options: 'i' } },
+                { 'job.company': { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        if (Object.keys(matchStage).length > 0) {
+            pipeline.push({ $match: matchStage });
+        }
+
+        // Sort Stage - Default newest first
+        pipeline.push({ $sort: { createdAt: -1 } });
+
+        // Project Stage
+        pipeline.push({
+            $project: {
+                _id: 1,
+                student: 1,
+                status: 1,
+                appliedDate: '$createdAt',
+                'studentUser.name': { $ifNull: ['$studentUser.name', 'Unknown Student'] },
+                'studentProfile.universityRollNo': { $ifNull: ['$studentProfile.universityRollNo', 'N/A'] },
+                'studentProfile.profilePictureUrl': 1,
+                'job.title': { $ifNull: ['$job.title', 'Unknown Job'] },
+                'job.company': { $ifNull: ['$job.company', 'Unknown Company'] }
+            }
+        });
+
+        const applications = await Application.aggregate(pipeline);
+
+        res.json(applications);
+
+    } catch (error) {
+        console.error('Error fetching applications:', error);
+        res.status(500).json({ message: 'Server error fetching applications' });
+    }
+};
+
+// @desc    Export Applications as CSV
+// @route   GET /api/admin/applications/export
+// @access  Private (Admin only)
+exports.exportApplicationsCSV = async (req, res) => {
+    try {
+        // Fetch all applications with details
+        const applications = await Application.aggregate([
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'student',
+                    foreignField: '_id',
+                    as: 'studentUser'
+                }
+            },
+            { $unwind: { path: '$studentUser', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'studentprofiles',
+                    localField: 'student',
+                    foreignField: 'user',
+                    as: 'studentProfile'
+                }
+            },
+            { $unwind: { path: '$studentProfile', preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: 'jobs',
+                    localField: 'job',
+                    foreignField: '_id',
+                    as: 'job'
+                }
+            },
+            { $unwind: { path: '$job', preserveNullAndEmptyArrays: true } }
+        ]);
+
+        const headers = ['Application ID', 'Student Name', 'University Roll No', 'Job Title', 'Company', 'Status', 'Applied Date'];
+        let csvContent = headers.join(',') + '\n';
+
+        applications.forEach(app => {
+            const studentName = app.studentUser?.name || 'Unknown';
+            const rollNo = app.studentProfile?.universityRollNo || 'N/A';
+            const jobTitle = app.job?.title || 'Unknown';
+            const companyName = app.job?.company || 'Unknown';
+            const status = app.status;
+            const appliedDate = new Date(app.createdAt).toLocaleDateString();
+
+            const row = [
+                app._id,
+                `"${studentName.replace(/"/g, '""')}"`,
+                `"${rollNo.replace(/"/g, '""')}"`,
+                `"${jobTitle.replace(/"/g, '""')}"`,
+                `"${companyName.replace(/"/g, '""')}"`,
+                status,
+                appliedDate
+            ];
+            csvContent += row.join(',') + '\n';
+        });
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=applications_report.csv');
+        res.status(200).send(csvContent);
+
+    } catch (err) {
+        console.error("Error exporting applications:", err);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Get Student Full Profile (Admin)
+// @route   GET /api/admin/students/:id/profile
+// @access  Private (Admin only)
+exports.getStudentFullProfile = async (req, res) => {
+    try {
+        const studentId = req.params.id; // This is the User ID
+
+        const profile = await StudentProfile.findOne({ user: studentId }).populate('user', 'name email role');
+
+        if (!profile) {
+            // Even if profile is missing, return basic user info if user exists
+            const user = await User.findById(studentId).select('name email role');
+            if (!user) {
+                return res.status(404).json({ message: 'Student not found' });
+            }
+            return res.json({ user, profile: null });
+        }
+
+        res.json(profile);
+    } catch (err) {
+        console.error('Error fetching student profile:', err);
+        res.status(500).json({ message: 'Server error fetching profile' });
+    }
+};
+
+// @desc    Update Application Status (Admin)
+// @route   PUT /api/admin/applications/:id/status
+// @access  Private (Admin only)
+exports.updateApplicationStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const validStatuses = ['Applied', 'Shortlisted', 'Interview', 'Offer', 'Hired', 'Rejected'];
+
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Invalid status' });
+        }
+
+        const application = await Application.findById(req.params.id).populate('job');
+
+        if (!application) {
+            return res.status(404).json({ message: 'Application not found' });
+        }
+
+        application.status = status;
+
+        // If status is interview, we might want to ensure interviewDate is set, but kept optional here
+        if (status === 'Interview' && req.body.interviewDate) {
+            application.interviewDate = req.body.interviewDate;
+        }
+
+        await application.save();
+
+        // Create Notification for the student
+        let notificationMessage = `Your application status for ${application.job ? application.job.title : 'a job'} at ${application.job ? application.job.company : 'a company'} has been updated to ${status}.`;
+        let notificationType = 'info';
+
+        if (status === 'Shortlisted' || status === 'Interview') notificationType = 'success';
+        if (status === 'Offer' || status === 'Hired') notificationType = 'success';
+        if (status === 'Rejected') notificationType = 'error';
+        if (status === 'Pending' || status === 'Applied') notificationType = 'info';
+
+        await Notification.create({
+            recipient: application.student,
+            type: notificationType,
+            message: notificationMessage,
+            relatedId: application._id,
+            onModel: 'Application'
+        });
+
+        res.json(application);
+
+    } catch (err) {
+        console.error('Error updating application status:', err);
+        res.status(500).json({ message: 'Server error updating status' });
+    }
+};
+
+// @desc    Get Application Details (Full Profile for Admin)
+// @route   GET /api/admin/applications/:id/details
+// @access  Private (Admin)
+exports.getApplicationDetails = async (req, res) => {
+    try {
+        const applicationId = req.params.id;
+
+        const application = await Application.findById(applicationId)
+            .populate('job', 'title company location type salary')
+            .populate('student', 'name email');
+
+        if (!application) {
+            return res.status(404).json({ message: 'Application not found' });
+        }
+
+        if (!application.student) {
+            return res.status(404).json({ message: 'Student not found for this application' });
+        }
+
+        // Fetch Student Profile
+        const profile = await StudentProfile.findOne({ user: application.student._id });
+
+        res.json({
+            application,
+            profile: profile || {}
+        });
+    } catch (err) {
+        console.error('Error fetching application details:', err);
+        res.status(500).json({ message: 'Server error fetching application details' });
+    }
+};
+
+// @desc    Get Admin Profile
+// @route   GET /api/admin/profile
+// @access  Private (Admin)
+exports.getAdminProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId).select('name email role jobTitle notificationPreferences employeeId profileImage');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        res.json(user);
+    } catch (err) {
+        console.error('Error fetching admin profile:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Update Admin Profile
+// @route   PUT /api/admin/profile
+// @access  Private (Admin)
+exports.updateAdminProfile = async (req, res) => {
+    try {
+        const { name, email, jobTitle, notificationPreferences } = req.body;
+        const user = await User.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (name) user.name = name;
+        if (email) user.email = email;
+        if (jobTitle) user.jobTitle = jobTitle;
+        if (req.body.employeeId) user.employeeId = req.body.employeeId;
+        if (req.body.profileImage) user.profileImage = req.body.profileImage;
+        if (notificationPreferences) {
+            user.notificationPreferences = {
+                ...user.notificationPreferences,
+                ...notificationPreferences
+            };
+        }
+
+        await user.save();
+        res.json(user);
+    } catch (err) {
+        console.error('Error updating admin profile:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Get System Settings
+// @route   GET /api/admin/settings
+// @access  Private (Admin)
+exports.getSystemSettings = async (req, res) => {
+    try {
+        let settings = await SystemSettings.findOne();
+        if (!settings) {
+            // Create default settings if none exist
+            settings = await SystemSettings.create({
+                updatedBy: req.user.userId
+            });
+        }
+        res.json(settings);
+    } catch (err) {
+        console.error('Error fetching system settings:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Update System Settings
+// @route   PUT /api/admin/settings
+// @access  Private (Admin)
+exports.updateSystemSettings = async (req, res) => {
+    try {
+        const { academicYear, placementSeasonStart, placementSeasonEnd, openRegistration } = req.body;
+
+        let settings = await SystemSettings.findOne();
+        if (!settings) {
+            settings = new SystemSettings();
+        }
+
+        if (academicYear) settings.academicYear = academicYear;
+        if (placementSeasonStart) settings.placementSeasonStart = placementSeasonStart;
+        if (placementSeasonEnd) settings.placementSeasonEnd = placementSeasonEnd;
+        if (typeof openRegistration === 'boolean') settings.openRegistration = openRegistration;
+
+        settings.updatedBy = req.user.userId;
+
+        await settings.save();
+        res.json(settings);
+    } catch (err) {
+        console.error('Error updating system settings:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// @desc    Upload Admin Avatar
+// @route   POST /api/admin/upload-avatar
+// @access  Private (Admin)
+exports.uploadAdminAvatar = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ msg: 'No file uploaded' });
+        }
+
+        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
+
+        // Update user profile directly
+        const user = await User.findById(req.user.userId);
+        if (user) {
+            user.profileImage = imageUrl;
+            await user.save();
+        }
+
+        res.json({ imageUrl, msg: 'Avatar uploaded successfully' });
+    } catch (err) {
+        console.error(err.message);
         res.status(500).send('Server error');
     }
 };

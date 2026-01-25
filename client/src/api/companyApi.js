@@ -62,6 +62,16 @@ export const updateJob = async (id, jobData) => {
     }
 };
 
+// Delete Job
+export const deleteJob = async (id) => {
+    try {
+        const response = await api.delete(`/company/jobs/${id}`);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data?.msg || 'Failed to delete job';
+    }
+};
+
 // Get Applications Stats
 export const getApplicationsStats = async () => {
     try {

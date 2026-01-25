@@ -1,7 +1,7 @@
 import React from 'react';
-import { MapPin, DollarSign, Clock, Users, FileText, Calendar, Edit2, Code, Megaphone, Server, Palette } from 'lucide-react';
+import { MapPin, IndianRupee, Clock, Users, FileText, Calendar, Edit2, Code, Megaphone, Server, Palette, Trash2 } from 'lucide-react';
 
-const JobCard = ({ job, onPublish, onView, onEdit }) => {
+const JobCard = ({ job, onPublish, onView, onEdit, onDelete }) => {
 
     // Status color mapping
     const getStatusColor = (status) => {
@@ -58,7 +58,7 @@ const JobCard = ({ job, onPublish, onView, onEdit }) => {
                     {job.location}
                 </div>
                 <div className="flex items-center gap-2">
-                    <DollarSign size={16} />
+                    <IndianRupee size={16} />
                     {job.salary}
                 </div>
                 <div className="flex items-center gap-2">
@@ -110,8 +110,16 @@ const JobCard = ({ job, onPublish, onView, onEdit }) => {
                 <button
                     onClick={onEdit}
                     className="p-2 border border-border rounded-lg text-foreground-muted hover:text-foreground hover:bg-gray-50 dark:hover:bg-background-muted transition-colors"
+                    title="Edit Job"
                 >
                     <Edit2 size={18} />
+                </button>
+                <button
+                    onClick={onDelete}
+                    className="p-2 border border-border rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                    title="Delete Job"
+                >
+                    <Trash2 size={18} />
                 </button>
             </div>
 

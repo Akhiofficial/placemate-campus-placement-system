@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     Search,
     Plus,
@@ -21,6 +22,8 @@ import {
 import { Bar, Line } from 'react-chartjs-2';
 import axios from '../../api/axios'; // Import centralized axios instance
 import toast from 'react-hot-toast';
+import NotificationsDropdown from '../../components/common/NotificationsDropdown';
+import { getAdminProfile } from '../../api/adminApi';
 
 ChartJS.register(
     CategoryScale,
@@ -35,11 +38,13 @@ ChartJS.register(
 );
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState([]);
     const [placementData, setPlacementData] = useState(null);
     const [offersData, setOffersData] = useState(null);
     const [recentJobs, setRecentJobs] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [adminProfile, setAdminProfile] = useState(null);
 
     const [isAddJobOpen, setIsAddJobOpen] = useState(false);
     const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
@@ -47,9 +52,13 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const res = await axios.get('/admin/dashboard-stats');
+                const [res, profile] = await Promise.all([
+                    axios.get('/admin/dashboard-stats'),
+                    getAdminProfile() // Fetch profile
+                ]);
                 const { stats, placementByDept, offersTrend, recentJobs } = res.data;
 
+                setAdminProfile(profile);
                 setStats(stats);
 
                 setPlacementData({
@@ -183,12 +192,15 @@ const AdminDashboard = () => {
                     <button onClick={() => setIsAddCompanyOpen(true)} className="flex items-center gap-2 bg-white dark:bg-card border border-gray-200 dark:border-border text-foreground px-4 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-accent transition-colors">
                         Add Company
                     </button>
-                    <button className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-accent rounded-full transition-colors relative">
-                        <Bell size={20} />
-                        <span className="absolute top-1.5 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-card"></span>
-                    </button>
+
+                    <NotificationsDropdown />
+
                     <div className="w-9 h-9 rounded-full bg-blue-100 overflow-hidden border border-gray-200">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Admin" alt="Admin" className="w-full h-full object-cover" />
+                        <img
+                            src={adminProfile?.profileImage || "https://api.dicebear.com/7.x/avataaars/svg?seed=Admin"}
+                            alt="Admin"
+                            className="w-full h-full object-cover"
+                        />
                     </div>
                 </div>
             </div>
@@ -256,7 +268,12 @@ const AdminDashboard = () => {
             <div className="bg-card dark:bg-card rounded-xl border border-border shadow-sm overflow-hidden">
                 <div className="p-6 flex items-center justify-between border-b border-border">
                     <h3 className="font-bold text-foreground text-lg">Recent Job Postings</h3>
-                    <button className="text-blue-600 text-sm font-semibold hover:underline">View All</button>
+                    <button
+                        onClick={() => navigate('/admin/jobs')}
+                        className="text-blue-600 text-sm font-semibold hover:underline"
+                    >
+                        View All
+                    </button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">

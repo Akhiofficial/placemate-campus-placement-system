@@ -75,6 +75,8 @@ exports.createJob = async (req, res) => {
             type,
             workMode,
             salary,
+            salaryMin,
+            salaryMax,
             requirements,
             tags,
             status
@@ -90,6 +92,8 @@ exports.createJob = async (req, res) => {
             type,
             workMode,
             salary,
+            salaryMin,
+            salaryMax,
             requirements,
             tags,
             status: status || 'Open'
@@ -127,6 +131,8 @@ exports.updateJob = async (req, res) => {
             type,
             workMode,
             salary,
+            salaryMin,
+            salaryMax,
             requirements,
             tags,
             status
@@ -140,6 +146,8 @@ exports.updateJob = async (req, res) => {
         if (type) jobFields.type = type;
         if (workMode) jobFields.workMode = workMode;
         if (salary) jobFields.salary = salary;
+        if (salaryMin) jobFields.salaryMin = salaryMin;
+        if (salaryMax) jobFields.salaryMax = salaryMax;
         if (status) jobFields.status = status;
         if (requirements) jobFields.requirements = requirements;
         if (tags) jobFields.tags = tags;
@@ -151,6 +159,36 @@ exports.updateJob = async (req, res) => {
         );
 
         res.json(job);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server error');
+    }
+};
+
+// @desc    Delete Job
+// @route   DELETE /api/company/jobs/:id
+// @access  Private (Company)
+exports.deleteJob = async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.id);
+
+        if (!job) {
+            return res.status(404).json({ msg: 'Job not found' });
+        }
+
+        // Make sure user owns the job
+        if (job.postedBy.toString() !== req.user.userId.toString()) {
+            return res.status(401).json({ msg: 'Not authorized' });
+        }
+
+        await Job.findByIdAndDelete(req.params.id);
+        // Optionally delete associated applications or keep them?
+        // Usually, if a job is deleted, applications are also deleted or orphaned.
+        // For now, let's keep it simple and just delete the job.
+        // Better: Delete applications related to this job to clean up
+        await Application.deleteMany({ job: req.params.id });
+
+        res.json({ msg: 'Job removed' });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server error');

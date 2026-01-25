@@ -23,9 +23,21 @@ const {
     deleteJobAdmin,
     updateJobStatusAdmin,
     updateJobAdmin,
-    exportJobsCSV
+    exportJobsCSV,
+    getApplicationStats,
+    getAllApplications,
+    exportApplicationsCSV,
+    getStudentFullProfile,
+    updateApplicationStatus,
+    getApplicationDetails,
+    getAdminProfile,
+    updateAdminProfile,
+    getSystemSettings,
+    updateSystemSettings,
+    uploadAdminAvatar
 } = require('../controllers/adminController');
 const { protect, authorize } = require('../middleware/auth');
+const uploadImage = require('../middleware/uploadImage');
 
 const router = express.Router();
 
@@ -42,8 +54,35 @@ router.get('/dashboard-stats', getDashboardStats);
 // Get Job Page Analytics
 router.get('/job-analytics', getJobAnalytics);
 
+// Get Application Stats
+router.get('/application-stats', getApplicationStats);
+
+// Get All Applications (Admin Table)
+router.get('/applications', getAllApplications);
+
 // Export Jobs CSV
 router.get('/jobs/export', exportJobsCSV);
+
+// Export Applications CSV
+router.get('/applications/export', exportApplicationsCSV);
+
+// Get Student Full Profile
+router.get('/students/:id/profile', getStudentFullProfile);
+
+// Get Application Details
+router.get('/applications/:id/details', getApplicationDetails);
+
+// Update Application Status
+router.put('/applications/:id/status', updateApplicationStatus);
+
+// Admin Profile
+router.get('/profile', getAdminProfile);
+router.put('/profile', updateAdminProfile);
+router.post('/upload-avatar', uploadImage.single('image'), uploadAdminAvatar);
+
+// System Settings
+router.get('/settings', getSystemSettings);
+router.put('/settings', updateSystemSettings);
 
 // Get all admin requests (including approved/rejected)
 router.get('/admin-requests/all', getAllAdminRequests);

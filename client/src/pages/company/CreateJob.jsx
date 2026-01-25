@@ -41,7 +41,7 @@ const CreateJob = () => {
                 title: formData.title,
                 type: formData.type,
                 workMode: formData.workMode,
-                salary: `$${formData.salaryMin} - $${formData.salaryMax} / year`,
+                salary: `₹${formData.salaryMin} - ₹${formData.salaryMax} LPA`,
                 description: formData.description,
                 requirements: formData.requirements.split('\n').filter(line => line.trim() !== ''), // Split by new line
                 department: formData.department,
@@ -193,11 +193,11 @@ const CreateJob = () => {
                         {/* Salary Range */}
                         <div>
                             <label className="block text-sm font-semibold text-foreground mb-2">
-                                Salary Range (Annual) <span className="text-red-500">*</span>
+                                Salary Range (Annual in LPA) <span className="text-red-500">*</span>
                             </label>
                             <div className="flex items-center gap-4">
                                 <div className="relative flex-1">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</div>
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₹</div>
                                     <input
                                         name="salaryMin"
                                         value={formData.salaryMin}
@@ -209,7 +209,7 @@ const CreateJob = () => {
                                 </div>
                                 <span className="text-foreground-muted font-medium">to</span>
                                 <div className="relative flex-1">
-                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">$</div>
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-medium">₹</div>
                                     <input
                                         name="salaryMax"
                                         value={formData.salaryMax}

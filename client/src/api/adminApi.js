@@ -42,3 +42,46 @@ export const downloadJobsReport = async () => {
     const response = await api.get('/admin/jobs/export', { responseType: 'blob' });
     return response.data;
 };
+
+// --- Applications ---
+
+// Get Application Details
+export const getApplicationDetails = async (id) => {
+    const response = await api.get(`/admin/applications/${id}/details`);
+    return response.data;
+};
+
+// Update Application Status
+export const updateApplicationStatus = async (id, status, interviewDate) => {
+    const response = await api.put(`/admin/applications/${id}/status`, { status, interviewDate });
+    return response.data;
+};
+
+// --- Settings ---
+
+export const getAdminProfile = async () => {
+    const response = await api.get('/admin/profile');
+    return response.data;
+};
+
+export const updateAdminProfile = async (data) => {
+    const response = await api.put('/admin/profile', data);
+    return response.data;
+};
+
+export const getSystemSettings = async () => {
+    const response = await api.get('/admin/settings');
+    return response.data;
+};
+
+export const updateSystemSettings = async (data) => {
+    const response = await api.put('/admin/settings', data);
+    return response.data;
+};
+
+export const uploadAdminAvatar = async (formData) => {
+    const response = await api.post('/admin/upload-avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    });
+    return response.data;
+};

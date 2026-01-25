@@ -17,7 +17,7 @@ const ApplicationSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Applied', 'Pending', 'In Review', 'Shortlisted', 'Interview', 'Offer', 'Rejected'],
+        enum: ['Applied', 'Pending', 'In Review', 'Shortlisted', 'Interview', 'Offer', 'Hired', 'Rejected'],
         default: 'Applied'
     },
     aiScore: {
@@ -28,6 +28,9 @@ const ApplicationSchema = new mongoose.Schema({
     notes: {
         type: String,
         trim: true
+    },
+    interviewDate: {
+        type: Date
     }
 }, { timestamps: true });
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     User,
     Settings,
@@ -12,11 +12,132 @@ import {
     ToggleRight,
     Camera
 } from 'lucide-react';
+import { getAdminProfile, updateAdminProfile, getSystemSettings, updateSystemSettings, uploadAdminAvatar } from '../../api/adminApi';
 
 const AdminSettings = () => {
-    const [openRegistration, setOpenRegistration] = useState(true);
-    const [emailAlerts, setEmailAlerts] = useState(true);
-    const [pushNotifications, setPushNotifications] = useState(false);
+    // Profile State
+    const [profile, setProfile] = useState({
+        name: '',
+        email: '',
+        jobTitle: '',
+        notificationPreferences: {
+            newApplicant: true,
+            interviewReminders: true, // mapped to emailAlerts in UI for simplicity or we add specific fields
+            jobStatus: false // mapped to pushNotifications
+        }
+    });
+
+    // System Settings State
+    const [settings, setSettings] = useState({
+        academicYear: '2023 - 2024',
+        placementSeasonStart: '',
+        placementSeasonEnd: '',
+        openRegistration: true
+    });
+
+    const [loading, setLoading] = useState(true);
+    const [savingProfile, setSavingProfile] = useState(false);
+    const [savingSettings, setSavingSettings] = useState(false);
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [profileData, settingsData] = await Promise.all([
+                getAdminProfile(),
+                getSystemSettings()
+            ]);
+
+            setProfile({
+                name: profileData.name || '',
+                email: profileData.email || '',
+                jobTitle: profileData.jobTitle || '',
+                employeeId: profileData.employeeId || '',
+                profileImage: profileData.profileImage || '',
+                notificationPreferences: profileData.notificationPreferences || {}
+            });
+
+            setSettings({
+                academicYear: settingsData.academicYear || '2025-2026',
+                placementSeasonStart: settingsData.placementSeasonStart ? new Date(settingsData.placementSeasonStart).toISOString().split('T')[0] : '',
+                placementSeasonEnd: settingsData.placementSeasonEnd ? new Date(settingsData.placementSeasonEnd).toISOString().split('T')[0] : '',
+                openRegistration: settingsData.openRegistration
+            });
+        } catch (error) {
+            console.error("Error fetching settings:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Profile Handlers
+    const handleProfileChange = (e) => {
+        const { name, value } = e.target;
+        setProfile(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSaveProfile = async () => {
+        try {
+            setSavingProfile(true);
+            await updateAdminProfile(profile);
+            alert('Profile updated successfully!');
+        } catch (error) {
+            console.error("Error saving profile:", error);
+            alert('Failed to save profile.');
+        } finally {
+            setSavingProfile(false);
+        }
+    };
+
+    // Settings Handlers
+    const handleSettingChange = (e) => {
+        const { name, value } = e.target;
+        setSettings(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSaveSystemSettings = async () => { // Auto-save on toggle, manual for dates/year? Let's make manual save for now or implicit for toggle.
+        try {
+            setSavingSettings(true);
+            await updateSystemSettings(settings); // This saves all current settings state
+            // alert('System settings updated!'); 
+        } catch (error) {
+            console.error("Error saving settings:", error);
+        } finally {
+            setSavingSettings(false);
+        }
+    };
+
+    const toggleOpenRegistration = async () => {
+        const newValue = !settings.openRegistration;
+        setSettings(prev => ({ ...prev, openRegistration: newValue }));
+
+        // Immediate save for toggles is usually better UX
+        try {
+            await updateSystemSettings({ ...settings, openRegistration: newValue });
+        } catch (error) {
+            console.error("Error updating toggle:", error);
+            // Revert on error
+            setSettings(prev => ({ ...prev, openRegistration: !newValue }));
+        }
+    };
+
+
+
+    const togglePushNotifications = async () => {
+        const newVal = !profile.notificationPreferences?.jobStatus;
+        const newPrefs = { ...profile.notificationPreferences, jobStatus: newVal };
+        setProfile(prev => ({ ...prev, notificationPreferences: newPrefs }));
+        // Immediate save
+        try {
+            await updateAdminProfile({ notificationPreferences: newPrefs });
+        } catch (error) { console.error(error); }
+    };
+
+
+    if (loading) return <div className="p-8 text-center text-muted-foreground">Loading settings...</div>;
 
     return (
         <div className="space-y-6 max-w-5xl mx-auto">
@@ -31,7 +152,11 @@ const AdminSettings = () => {
                         <Bell className="w-5 h-5" />
                     </button>
                     <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden border border-border">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alexander" alt="Admin" className="w-full h-full object-cover" />
+                        <img
+                            src={profile.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || 'A')}&background=random`}
+                            alt="Admin"
+                            className="w-full h-full object-cover"
+                        />
                     </div>
                 </div>
             </div>
@@ -45,19 +170,83 @@ const AdminSettings = () => {
                         </div>
                         Profile Settings
                     </h2>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20">
-                        Save Profile
+                    <button
+                        onClick={handleSaveProfile}
+                        disabled={savingProfile}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors shadow-sm shadow-blue-500/20 disabled:opacity-50"
+                    >
+                        {savingProfile ? 'Saving...' : 'Save Profile'}
                     </button>
                 </div>
 
                 <div className="p-6 flex flex-col md:flex-row gap-8">
                     {/* Avatar */}
                     <div className="flex flex-col items-center gap-3">
-                        <div className="w-24 h-24 rounded-full bg-orange-100 border-4 border-white dark:border-gray-800 shadow-sm overflow-hidden">
-                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Alexander" alt="Profile" className="w-full h-full object-cover" />
+                        <div className="relative group w-24 h-24 rounded-full bg-orange-100 border-4 border-white dark:border-gray-800 shadow-sm overflow-hidden">
+                            <img
+                                src={profile.profileImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || 'A')}&background=random`}
+                                alt="Profile"
+                                className="w-full h-full object-cover"
+                            />
+                            <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                                <Camera className="w-6 h-6 text-white" />
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={async (e) => {
+                                        const file = e.target.files[0];
+                                        if (!file) return;
+
+                                        const formData = new FormData();
+                                        formData.append('image', file);
+
+                                        try {
+                                            // Optimistic update
+                                            const reader = new FileReader();
+                                            reader.onloadend = () => {
+                                                setProfile(prev => ({ ...prev, profileImage: reader.result }));
+                                            };
+                                            reader.readAsDataURL(file);
+
+                                            await uploadAdminAvatar(formData);
+                                            toast.success("Profile photo updated");
+                                        } catch (error) {
+                                            console.error("Error uploading image:", error);
+                                            toast.error("Failed to upload image");
+                                        }
+                                    }}
+                                />
+                            </label>
                         </div>
-                        <button className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline">
+                        <button className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline relative">
                             Change Photo
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="absolute inset-0 opacity-0 cursor-pointer"
+                                onChange={async (e) => {
+                                    const file = e.target.files[0];
+                                    if (!file) return;
+
+                                    const formData = new FormData();
+                                    formData.append('image', file);
+
+                                    try {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            setProfile(prev => ({ ...prev, profileImage: reader.result }));
+                                        };
+                                        reader.readAsDataURL(file);
+
+                                        await uploadAdminAvatar(formData);
+                                        toast.success("Profile photo updated");
+                                    } catch (error) {
+                                        console.error("Error uploading image:", error);
+                                        toast.error("Failed to upload image");
+                                    }
+                                }}
+                            />
                         </button>
                     </div>
 
@@ -66,16 +255,20 @@ const AdminSettings = () => {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Full Name</label>
                             <input
+                                name="name"
                                 type="text"
-                                defaultValue="Alexander Mitchell"
+                                value={profile.name}
+                                onChange={handleProfileChange}
                                 className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Email Address</label>
                             <input
+                                name="email"
                                 type="email"
-                                defaultValue="a.mitchell@university.edu"
+                                value={profile.email}
+                                onChange={handleProfileChange}
                                 className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             />
                         </div>
@@ -83,15 +276,21 @@ const AdminSettings = () => {
                             <label className="text-sm font-medium text-foreground">Employee ID</label>
                             <input
                                 type="text"
-                                defaultValue="TPO-8820"
+                                name="employeeId"
+                                value={profile.employeeId || ''}
+                                onChange={handleProfileChange}
+                                placeholder="ADMIN-001"
                                 className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Role</label>
                             <input
+                                name="jobTitle"
                                 type="text"
-                                defaultValue="Chief Placement Officer"
+                                value={profile.jobTitle}
+                                onChange={handleProfileChange}
+                                placeholder="e.g. Chief Placement Officer"
                                 className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                             />
                         </div>
@@ -101,13 +300,20 @@ const AdminSettings = () => {
 
             {/* System Configurations */}
             <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-border">
+                <div className="p-6 border-b border-border flex justify-between items-center">
                     <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
                         <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600">
                             <Settings className="w-5 h-5" />
                         </div>
                         System Configurations
                     </h2>
+                    <button
+                        onClick={handleSaveSystemSettings}
+                        disabled={savingSettings}
+                        className="px-4 py-2 bg-dark-bg border border-border text-foreground hover:bg-accent rounded-lg text-sm font-medium transition-colors"
+                    >
+                        {savingSettings ? 'Saving...' : 'Save Configs'}
+                    </button>
                 </div>
 
                 <div className="p-6 space-y-6">
@@ -115,10 +321,16 @@ const AdminSettings = () => {
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Active Academic Year</label>
                             <div className="relative">
-                                <select className="w-full appearance-none px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all">
+                                <select
+                                    name="academicYear"
+                                    value={settings.academicYear}
+                                    onChange={handleSettingChange}
+                                    className="w-full appearance-none px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                >
                                     <option>2023 - 2024</option>
                                     <option>2024 - 2025</option>
                                     <option>2025 - 2026</option>
+                                    <option>2026 - 2027</option>
                                 </select>
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                                     <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
@@ -131,7 +343,9 @@ const AdminSettings = () => {
                                 <div className="relative w-full sm:flex-1">
                                     <input
                                         type="date"
-                                        defaultValue="2024-08-01"
+                                        name="placementSeasonStart"
+                                        value={settings.placementSeasonStart}
+                                        onChange={handleSettingChange}
                                         className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                     />
                                 </div>
@@ -139,7 +353,9 @@ const AdminSettings = () => {
                                 <div className="relative w-full sm:flex-1">
                                     <input
                                         type="date"
-                                        defaultValue="2025-05-31"
+                                        name="placementSeasonEnd"
+                                        value={settings.placementSeasonEnd}
+                                        onChange={handleSettingChange}
                                         className="w-full px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                                     />
                                 </div>
@@ -155,11 +371,11 @@ const AdminSettings = () => {
                                 <p className="text-sm text-muted-foreground mt-0.5">Allow new students to register for the current season.</p>
                             </div>
                             <button
-                                onClick={() => setOpenRegistration(!openRegistration)}
-                                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${openRegistration ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                onClick={toggleOpenRegistration}
+                                className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${settings.openRegistration ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
                             >
                                 <span
-                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${openRegistration ? 'translate-x-6' : 'translate-x-1'}`}
+                                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${settings.openRegistration ? 'translate-x-6' : 'translate-x-1'}`}
                                 />
                             </button>
                         </div>
@@ -179,27 +395,7 @@ const AdminSettings = () => {
                 </div>
 
                 <div className="p-6 space-y-0 divide-y divide-border">
-                    <div className="flex items-center justify-between py-4 first:pt-0">
-                        <div className="flex items-start gap-3">
-                            <div className="p-2 bg-blue-50 dark:bg-blue-900/10 rounded-lg text-blue-600">
-                                <Mail className="w-5 h-5" />
-                            </div>
-                            <div>
-                                <h3 className="text-base font-semibold text-foreground">Email Alerts</h3>
-                                <p className="text-sm text-muted-foreground mt-0.5">Receive summaries of daily application activity.</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={() => setEmailAlerts(!emailAlerts)}
-                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${emailAlerts ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
-                        >
-                            <span
-                                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${emailAlerts ? 'translate-x-6' : 'translate-x-1'}`}
-                            />
-                        </button>
-                    </div>
-
-                    <div className="flex items-center justify-between py-4 last:pb-0">
+                    <div className="flex items-center justify-between py-4 first:pt-0 last:pb-0">
                         <div className="flex items-start gap-3">
                             <div className="p-2 bg-purple-50 dark:bg-purple-900/10 rounded-lg text-purple-600">
                                 <Smartphone className="w-5 h-5" />
@@ -210,11 +406,11 @@ const AdminSettings = () => {
                             </div>
                         </div>
                         <button
-                            onClick={() => setPushNotifications(!pushNotifications)}
-                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${pushNotifications ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
+                            onClick={togglePushNotifications}
+                            className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${profile.notificationPreferences?.jobStatus ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'}`}
                         >
                             <span
-                                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${pushNotifications ? 'translate-x-6' : 'translate-x-1'}`}
+                                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${profile.notificationPreferences?.jobStatus ? 'translate-x-6' : 'translate-x-1'}`}
                             />
                         </button>
                     </div>

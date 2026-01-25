@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, MapPin, DollarSign, Clock, Calendar, Users, Briefcase, FileText, CheckCircle } from 'lucide-react';
+import { X, MapPin, IndianRupee, Clock, Calendar, Users, Briefcase, FileText, CheckCircle } from 'lucide-react';
 
 const ApplicationDetailsModal = ({ application, onClose }) => {
     if (!application) return null;
@@ -69,7 +69,7 @@ const ApplicationDetailsModal = ({ application, onClose }) => {
                         <div className="p-3 bg-gray-50 dark:bg-background-muted rounded-lg">
                             <span className="text-xs text-foreground-muted uppercase font-bold block mb-1">Salary</span>
                             <span className="text-sm font-semibold text-foreground flex items-center gap-1">
-                                <DollarSign size={14} className="text-foreground-muted" /> {job.salary || "Not Disclosed"}
+                                <IndianRupee size={14} className="text-foreground-muted" /> {job.salary || "Not Disclosed"}
                             </span>
                         </div>
                         <div className="p-3 bg-gray-50 dark:bg-background-muted rounded-lg">
