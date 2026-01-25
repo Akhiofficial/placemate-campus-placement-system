@@ -6,6 +6,7 @@ import api from "../../api/axios";
 const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [activeTab, setActiveTab] = useState("personal");
+    const [countryCode, setCountryCode] = useState("+91");
     const [formData, setFormData] = useState({
         // Personal
         phone: "",
@@ -36,8 +37,29 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
 
     useEffect(() => {
         if (profile) {
+            // Parse Phone Number
+            let initialPhone = profile.phone || "";
+            let initialCode = "+91";
+
+            // Check for known country codes
+            if (initialPhone.startsWith("+91")) {
+                initialCode = "+91";
+                initialPhone = initialPhone.slice(3);
+            } else if (initialPhone.startsWith("+1")) {
+                initialCode = "+1";
+                initialPhone = initialPhone.slice(2);
+            } else if (initialPhone.startsWith("+44")) {
+                initialCode = "+44";
+                initialPhone = initialPhone.slice(3);
+            }
+
+            // Clean up to just digits and limit to 10
+            initialPhone = initialPhone.replace(/\D/g, '').slice(0, 10);
+
+            setCountryCode(initialCode);
+
             setFormData({
-                phone: profile.phone || "",
+                phone: initialPhone,
                 location: profile.location || "",
                 permanentAddress: profile.permanentAddress || "",
                 gender: profile.gender || "",
@@ -70,6 +92,14 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
         }));
     };
 
+    const handlePhoneChange = (e) => {
+        // Allow only number
+        const value = e.target.value.replace(/\D/g, '');
+        if (value.length <= 10) {
+            setFormData(prev => ({ ...prev, phone: value }));
+        }
+    };
+
     // Dynamic Fields Handlers
     const handleArrayChange = (index, field, value, type) => {
         setFormData(prev => {
@@ -99,11 +129,24 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
         e.preventDefault();
         setLoading(true);
         try {
-            const { data } = await api.put("/student/profile", formData);
+            // Validate phone
+            if (formData.phone && formData.phone.length !== 10) {
+                alert("Please enter a valid 10-digit phone number");
+                setLoading(false);
+                return;
+            }
+
+            const payload = {
+                ...formData,
+                phone: formData.phone ? `${countryCode}${formData.phone}` : ""
+            };
+
+            const { data } = await api.put("/student/profile", payload);
             onProfileUpdate(data);
             onClose();
         } catch (error) {
             console.error("Error updating profile:", error);
+            // alert("Failed to update profile"); // Optional
         } finally {
             setLoading(false);
         }
@@ -159,7 +202,7 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                         </div>
 
                         {/* Form Content */}
-                        <div className="flex-1 overflow-y-auto p-6 md:p-8">
+                        <div className="flex-1 overflow-y-auto p-6 md:p-8 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                             <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
 
                                 {activeTab === "personal" && (
@@ -167,16 +210,28 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
                                                 <label className="text-sm font-medium text-foreground">Phone Number</label>
-                                                <div className="relative">
-                                                    <Phone className="absolute left-3 top-2.5 text-foreground-muted" size={16} />
-                                                    <input
-                                                        type="text"
-                                                        name="phone"
-                                                        value={formData.phone}
-                                                        onChange={handleChange}
-                                                        className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
-                                                        placeholder="+1 234 567 8900"
-                                                    />
+                                                <div className="flex gap-2">
+                                                    <select
+                                                        className="w-24 px-2 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition text-sm"
+                                                        value={countryCode}
+                                                        onChange={(e) => setCountryCode(e.target.value)}
+                                                    >
+                                                        <option value="+91">+91 (IN)</option>
+                                                        <option value="+1">+1 (US)</option>
+                                                        <option value="+44">+44 (UK)</option>
+                                                    </select>
+                                                    <div className="relative flex-1">
+                                                        <Phone className="absolute left-3 top-2.5 text-foreground-muted" size={16} />
+                                                        <input
+                                                            type="text"
+                                                            name="phone"
+                                                            value={formData.phone}
+                                                            onChange={handlePhoneChange}
+                                                            className="w-full pl-10 pr-4 py-2 border border-border rounded-lg bg-background text-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition"
+                                                            placeholder="9999999999"
+                                                            maxLength={10}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="space-y-2">
@@ -331,23 +386,27 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                         {/* Experience Section */}
                                         <div className="space-y-4">
                                             <div className="flex justify-between items-center">
-                                                <h3 className="font-semibold text-lg">Experience</h3>
+                                                <h3 className="font-semibold text-lg text-foreground">Experience</h3>
                                                 <button type="button" onClick={() => addEntry('experience')} className="text-sm text-blue-600 font-medium hover:underline">+ Add Experience</button>
                                             </div>
                                             {formData.experience.map((exp, index) => (
-                                                <div key={index} className="p-4 border border-border rounded-lg space-y-3 relative bg-gray-50 dark:bg-card">
+                                                <div key={index} className="p-4 border border-border rounded-lg space-y-3 relative bg-gray-50 dark:bg-card/50 hover:border-blue-500/50 transition">
                                                     <button type="button" onClick={() => removeEntry(index, 'experience')} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
                                                         <X size={16} />
                                                     </button>
                                                     <div className="grid grid-cols-2 gap-3">
-                                                        <input type="text" placeholder="Title" value={exp.title} onChange={(e) => handleArrayChange(index, 'title', e.target.value, 'experience')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
-                                                        <input type="text" placeholder="Company" value={exp.company} onChange={(e) => handleArrayChange(index, 'company', e.target.value, 'experience')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                        <div className="space-y-1">
+                                                            <input type="text" placeholder="Title" value={exp.title} onChange={(e) => handleArrayChange(index, 'title', e.target.value, 'experience')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition" />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <input type="text" placeholder="Company" value={exp.company} onChange={(e) => handleArrayChange(index, 'company', e.target.value, 'experience')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition" />
+                                                        </div>
                                                     </div>
                                                     <div className="grid grid-cols-2 gap-3">
-                                                        <input type="date" placeholder="Start Date" value={exp.startDate ? exp.startDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'startDate', e.target.value, 'experience')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
-                                                        <input type="date" placeholder="End Date" value={exp.endDate ? exp.endDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'endDate', e.target.value, 'experience')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                        <input type="date" placeholder="Start Date" value={exp.startDate ? exp.startDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'startDate', e.target.value, 'experience')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground [scheme:dark] placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition" />
+                                                        <input type="date" placeholder="End Date" value={exp.endDate ? exp.endDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'endDate', e.target.value, 'experience')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground [scheme:dark] placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition" />
                                                     </div>
-                                                    <textarea placeholder="Description" rows="2" value={exp.description} onChange={(e) => handleArrayChange(index, 'description', e.target.value, 'experience')} className="w-full px-3 py-2 border border-border rounded bg-white dark:bg-background resize-none" />
+                                                    <textarea placeholder="Description" rows="2" value={exp.description} onChange={(e) => handleArrayChange(index, 'description', e.target.value, 'experience')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition resize-none" />
                                                 </div>
                                             ))}
                                         </div>
@@ -355,20 +414,20 @@ const EditProfileModal = ({ isOpen, onClose, profile, onProfileUpdate }) => {
                                         {/* Projects Section */}
                                         <div className="space-y-4">
                                             <div className="flex justify-between items-center">
-                                                <h3 className="font-semibold text-lg">Projects</h3>
+                                                <h3 className="font-semibold text-lg text-foreground">Projects</h3>
                                                 <button type="button" onClick={() => addEntry('projects')} className="text-sm text-blue-600 font-medium hover:underline">+ Add Project</button>
                                             </div>
                                             {formData.projects.map((proj, index) => (
-                                                <div key={index} className="p-4 border border-border rounded-lg space-y-3 relative bg-gray-50 dark:bg-card">
+                                                <div key={index} className="p-4 border border-border rounded-lg space-y-3 relative bg-gray-50 dark:bg-card/50 hover:border-blue-500/50 transition">
                                                     <button type="button" onClick={() => removeEntry(index, 'projects')} className="absolute top-2 right-2 text-gray-400 hover:text-red-500">
                                                         <X size={16} />
                                                     </button>
                                                     <div className="grid grid-cols-2 gap-3">
-                                                        <input type="text" placeholder="Project Title" value={proj.title} onChange={(e) => handleArrayChange(index, 'title', e.target.value, 'projects')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
-                                                        <input type="url" placeholder="Project Link" value={proj.link} onChange={(e) => handleArrayChange(index, 'link', e.target.value, 'projects')} className="px-3 py-2 border border-border rounded bg-white dark:bg-background" />
+                                                        <input type="text" placeholder="Project Title" value={proj.title} onChange={(e) => handleArrayChange(index, 'title', e.target.value, 'projects')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition" />
+                                                        <input type="url" placeholder="Project Link" value={proj.link} onChange={(e) => handleArrayChange(index, 'link', e.target.value, 'projects')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition" />
                                                     </div>
-                                                    <input type="date" placeholder="Start Date" value={proj.startDate ? proj.startDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'startDate', e.target.value, 'projects')} className="w-full px-3 py-2 border border-border rounded bg-white dark:bg-background" />
-                                                    <textarea placeholder="Description" rows="2" value={proj.description} onChange={(e) => handleArrayChange(index, 'description', e.target.value, 'projects')} className="w-full px-3 py-2 border border-border rounded bg-white dark:bg-background resize-none" />
+                                                    <input type="date" placeholder="Start Date" value={proj.startDate ? proj.startDate.split('T')[0] : ''} onChange={(e) => handleArrayChange(index, 'startDate', e.target.value, 'projects')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground [scheme:dark] placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition" />
+                                                    <textarea placeholder="Description" rows="2" value={proj.description} onChange={(e) => handleArrayChange(index, 'description', e.target.value, 'projects')} className="w-full px-3 py-2 border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition resize-none" />
                                                 </div>
                                             ))}
                                         </div>
