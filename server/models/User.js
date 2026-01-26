@@ -30,8 +30,11 @@ const UserSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
+        required: function () {
+            return !this.googleId;
+        }
     },
+    googleId: String,
     role: {
         type: String,
         enum: ['student', 'company', 'admin', 'superadmin'],

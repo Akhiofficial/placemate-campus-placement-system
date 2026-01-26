@@ -249,7 +249,7 @@ const SignupForm = () => {
             </div>
 
             <div className="mb-8">
-                <SocialLogin />
+                <SocialLogin role={role} />
             </div>
 
             <p className="mt-8 text-center text-sm text-foreground-muted">

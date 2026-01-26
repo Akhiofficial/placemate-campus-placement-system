@@ -28,6 +28,19 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static('uploads'));
 
+// Session Config (Required for Passport OAuth)
+const session = require('express-session');
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'secret_key',
+    resave: false,
+    saveUninitialized: false
+}));
+
+const passport = require('passport');
+require('./config/passport');
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Connect to MongoDB
 connectDB();
 

@@ -206,7 +206,7 @@ const LoginForm = () => {
             </form>
 
             <div className="mt-8">
-                <SocialLogin />
+                <SocialLogin role={role} />
             </div>
 
             <p className="mt-8 text-center text-sm text-gray-500">
