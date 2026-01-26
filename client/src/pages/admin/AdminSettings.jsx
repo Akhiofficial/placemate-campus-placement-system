@@ -10,7 +10,10 @@ import {
     Smartphone,
     ToggleLeft,
     ToggleRight,
-    Camera
+    Camera,
+    Plus,
+    X,
+    Check
 } from 'lucide-react';
 import { getAdminProfile, updateAdminProfile, getSystemSettings, updateSystemSettings, uploadAdminAvatar } from '../../api/adminApi';
 
@@ -30,10 +33,14 @@ const AdminSettings = () => {
     // System Settings State
     const [settings, setSettings] = useState({
         academicYear: '2023 - 2024',
+        academicYears: [],
         placementSeasonStart: '',
         placementSeasonEnd: '',
         openRegistration: true
     });
+
+    const [isAddingYear, setIsAddingYear] = useState(false);
+    const [newYearInput, setNewYearInput] = useState('');
 
     const [loading, setLoading] = useState(true);
     const [savingProfile, setSavingProfile] = useState(false);
@@ -62,6 +69,7 @@ const AdminSettings = () => {
 
             setSettings({
                 academicYear: settingsData.academicYear || '2025-2026',
+                academicYears: settingsData.academicYears || [],
                 placementSeasonStart: settingsData.placementSeasonStart ? new Date(settingsData.placementSeasonStart).toISOString().split('T')[0] : '',
                 placementSeasonEnd: settingsData.placementSeasonEnd ? new Date(settingsData.placementSeasonEnd).toISOString().split('T')[0] : '',
                 openRegistration: settingsData.openRegistration
@@ -134,6 +142,31 @@ const AdminSettings = () => {
         try {
             await updateAdminProfile({ notificationPreferences: newPrefs });
         } catch (error) { console.error(error); }
+        try {
+            await updateAdminProfile({ notificationPreferences: newPrefs });
+        } catch (error) { console.error(error); }
+    };
+
+    const handleAddYear = () => {
+        if (!newYearInput.trim()) return;
+
+        // Simple validation format YYYY - YYYY
+        // Not enforcing strict regex for now to allow flexibility
+
+        if (settings.academicYears.includes(newYearInput.trim())) {
+            alert('This academic year already exists.');
+            return;
+        }
+
+        const newYears = [...settings.academicYears, newYearInput.trim()].sort();
+        setSettings(prev => ({
+            ...prev,
+            academicYears: newYears,
+            academicYear: newYearInput.trim() // Auto-select new year
+        }));
+
+        setIsAddingYear(false);
+        setNewYearInput('');
     };
 
 
@@ -320,22 +353,67 @@ const AdminSettings = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Active Academic Year</label>
-                            <div className="relative">
-                                <select
-                                    name="academicYear"
-                                    value={settings.academicYear}
-                                    onChange={handleSettingChange}
-                                    className="w-full appearance-none px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                                >
-                                    <option>2023 - 2024</option>
-                                    <option>2024 - 2025</option>
-                                    <option>2025 - 2026</option>
-                                    <option>2026 - 2027</option>
-                                </select>
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                                    <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                            {isAddingYear ? (
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="text"
+                                        value={newYearInput}
+                                        onChange={(e) => setNewYearInput(e.target.value)}
+                                        placeholder="e.g. 2027 - 2028"
+                                        className="flex-1 px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                        autoFocus
+                                    />
+                                    <button
+                                        onClick={handleAddYear}
+                                        className="p-2.5 bg-green-100 text-green-600 dark:bg-green-900/30 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors"
+                                    >
+                                        <Check className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setIsAddingYear(false);
+                                            setNewYearInput('');
+                                        }}
+                                        className="p-2.5 bg-red-100 text-red-600 dark:bg-red-900/30 rounded-lg hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <select
+                                            name="academicYear"
+                                            value={settings.academicYear}
+                                            onChange={handleSettingChange}
+                                            className="w-full appearance-none px-4 py-2.5 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                                        >
+                                            {settings.academicYears.length > 0 ? (
+                                                settings.academicYears.map(year => (
+                                                    <option key={year} value={year}>{year}</option>
+                                                ))
+                                            ) : (
+                                                <>
+                                                    <option>2023 - 2024</option>
+                                                    <option>2024 - 2025</option>
+                                                    <option>2025 - 2026</option>
+                                                    <option>2026 - 2027</option>
+                                                </>
+                                            )}
+                                        </select>
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                            <svg className="w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsAddingYear(true)}
+                                        className="p-2.5 border border-border rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                                        title="Add New Academic Year"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Placement Season</label>

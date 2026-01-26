@@ -1548,6 +1548,10 @@ exports.getSystemSettings = async (req, res) => {
             settings = await SystemSettings.create({
                 updatedBy: req.user.userId
             });
+        } else if (!settings.academicYears || settings.academicYears.length === 0) {
+            // Migration: Add default academic years if missing
+            settings.academicYears = ['2023 - 2024', '2024 - 2025', '2025 - 2026', '2026 - 2027'];
+            await settings.save();
         }
         res.json(settings);
     } catch (err) {
@@ -1561,7 +1565,7 @@ exports.getSystemSettings = async (req, res) => {
 // @access  Private (Admin)
 exports.updateSystemSettings = async (req, res) => {
     try {
-        const { academicYear, placementSeasonStart, placementSeasonEnd, openRegistration } = req.body;
+        const { academicYear, placementSeasonStart, placementSeasonEnd, openRegistration, academicYears } = req.body;
 
         let settings = await SystemSettings.findOne();
         if (!settings) {
@@ -1569,6 +1573,7 @@ exports.updateSystemSettings = async (req, res) => {
         }
 
         if (academicYear) settings.academicYear = academicYear;
+        if (academicYears) settings.academicYears = academicYears;
         if (placementSeasonStart) settings.placementSeasonStart = placementSeasonStart;
         if (placementSeasonEnd) settings.placementSeasonEnd = placementSeasonEnd;
         if (typeof openRegistration === 'boolean') settings.openRegistration = openRegistration;

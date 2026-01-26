@@ -5,6 +5,10 @@ const SystemSettingsSchema = new mongoose.Schema({
         type: String,
         default: '2025-2026'
     },
+    academicYears: {
+        type: [String],
+        default: ['2023 - 2024', '2024 - 2025', '2025 - 2026', '2026 - 2027']
+    },
     placementSeasonStart: {
         type: Date,
         default: new Date('2025-06-01')
