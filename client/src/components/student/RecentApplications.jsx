@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from 'react-router-dom';
 
 const statusStyles = {
   "In Review": "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
@@ -11,6 +12,7 @@ const statusStyles = {
 };
 
 const RecentApplications = ({ applications = [] }) => {
+  const navigate = useNavigate();
   // Helper to format date
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -27,7 +29,10 @@ const RecentApplications = ({ applications = [] }) => {
         <h2 className="text-lg font-semibold text-foreground">
           Recent Applications
         </h2>
-        <button className="text-blue-600 text-sm font-medium hover:underline cursor-pointer">
+        <button
+          onClick={() => navigate('/student/applications')}
+          className="text-blue-600 text-sm font-medium hover:underline cursor-pointer"
+        >
           View All
         </button>
       </div>

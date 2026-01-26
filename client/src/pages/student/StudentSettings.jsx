@@ -3,6 +3,7 @@ import { useOutletContext } from "react-router-dom";
 import { motion } from "framer-motion";
 import { User, Lock, Bell, Camera, Mail, Phone, Save, Shield, Loader2 } from "lucide-react";
 import api from "../../api/axios";
+import { Link } from "react-router-dom";
 
 const StudentSettings = () => {
     const { refreshUser } = useOutletContext();
@@ -193,7 +194,7 @@ const StudentSettings = () => {
                 {/* Header */}
                 <div>
                     <div className="flex items-center gap-2 text-sm text-foreground-muted mb-1">
-                        <span className="hover:text-blue-600 transition cursor-pointer">Dashboard</span>
+                        <Link to="/student/dashboard" className="hover:text-blue-600 transition">Dashboard</Link>
                         <span>›</span>
                         <span className="text-foreground font-medium">Settings</span>
                     </div>
