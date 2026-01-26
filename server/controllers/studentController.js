@@ -86,7 +86,7 @@ exports.updateProfile = async (req, res) => {
         dateOfBirth, gender, permanentAddress, phone, location, profilePictureUrl, isOpenToWork,
         // Academic Info
         universityRollNo, currentSemester, backlogs, attendance,
-        cgpa, graduationYear, department, major,
+        cgpa, graduationYear, department, major, university,
         // Professional & Skills
         resumeUrl, skills, bio, portfolioUrl, linkedinUrl,
         // Settings
@@ -142,6 +142,7 @@ exports.updateProfile = async (req, res) => {
     if (graduationYear) profileFields.graduationYear = graduationYear;
     if (department) profileFields.department = department;
     if (major) profileFields.major = major;
+    if (university) profileFields.university = university;
 
     // Professional & Skills
     if (resumeUrl) profileFields.resumeUrl = resumeUrl;

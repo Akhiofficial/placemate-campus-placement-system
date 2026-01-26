@@ -690,6 +690,7 @@ exports.createJob = async (req, res) => {
         const {
             title,
             company,
+            companyId, // Add this
             description,
             location,
             type,
@@ -699,12 +700,17 @@ exports.createJob = async (req, res) => {
             eligibility
         } = req.body;
 
-
-
+        let companyName = company;
+        if (!companyName && companyId) {
+            const companyUser = await User.findById(companyId);
+            if (companyUser) {
+                companyName = companyUser.companyName || companyUser.name;
+            }
+        }
 
         const job = new Job({
             title,
-            company, // Text name of company
+            company: companyName || 'Unknown Company', // Text name of company
             description,
             location, // Ensure location is passed
             type,
@@ -712,7 +718,7 @@ exports.createJob = async (req, res) => {
             requirements: Array.isArray(requirements) ? requirements : (requirements ? requirements.split(',').map(s => s.trim()) : []),
             deadline,
             eligibility,
-            postedBy: req.user.userId, // Admin is the poster
+            postedBy: companyId || req.user.userId, // Link to company if provided, else Admin
             status: req.body.status ? (req.body.status === 'Active' ? 'Open' : req.body.status) : 'Open',
             workMode: req.body.workMode,
             department: req.body.team, // 'team' from frontend -> 'department' in schema
@@ -1566,6 +1572,7 @@ exports.updateSystemSettings = async (req, res) => {
         if (placementSeasonStart) settings.placementSeasonStart = placementSeasonStart;
         if (placementSeasonEnd) settings.placementSeasonEnd = placementSeasonEnd;
         if (typeof openRegistration === 'boolean') settings.openRegistration = openRegistration;
+        if (typeof req.body.maintenanceMode === 'boolean') settings.maintenanceMode = req.body.maintenanceMode;
 
         settings.updatedBy = req.user.userId;
 

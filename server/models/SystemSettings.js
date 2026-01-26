@@ -17,6 +17,10 @@ const SystemSettingsSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    maintenanceMode: {
+        type: Boolean,
+        default: false
+    },
     updatedBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

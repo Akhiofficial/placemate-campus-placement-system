@@ -15,9 +15,12 @@ exports.applyForJob = async (req, res) => {
         const jobId = req.params.jobId;
         const studentId = req.user.userId;
 
+        console.log(`[DEBUG] applyForJob called. JobId: ${jobId}, StudentId: ${studentId}`);
+
         // Check if job exists
         const job = await Job.findById(jobId);
         if (!job) {
+            console.log(`[DEBUG] Job not found for ID: ${jobId}`);
             return res.status(404).json({ msg: 'Job not found' });
         }
 

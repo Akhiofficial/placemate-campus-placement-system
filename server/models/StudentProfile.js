@@ -41,6 +41,10 @@ const StudentProfileSchema = new mongoose.Schema({
     },
 
     // Academic Information
+    university: {
+        type: String,
+        trim: true
+    },
     universityRollNo: {
         type: String,
         trim: true,

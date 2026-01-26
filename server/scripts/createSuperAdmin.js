@@ -14,9 +14,10 @@ const createSuperAdmin = async () => {
         // Check if Super Admin already exists
         const existingAdmin = await User.findOne({ email: 'superadmin@placemate.com' });
         if (existingAdmin) {
-            console.log('Super Admin already exists!');
-            console.log(`Email: ${existingAdmin.email}`);
-            console.log(`Name: ${existingAdmin.name}`);
+            console.log('Super Admin already exists! Updating password...');
+            existingAdmin.password = 'SuperAdmin@123';
+            await existingAdmin.save();
+            console.log('✅ Super Admin password updated to: SuperAdmin@123');
             process.exit(0);
         }
 
