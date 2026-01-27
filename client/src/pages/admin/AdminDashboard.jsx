@@ -23,7 +23,7 @@ import { Bar, Line } from 'react-chartjs-2';
 import axios from '../../api/axios'; // Import centralized axios instance
 import toast from 'react-hot-toast';
 import NotificationsDropdown from '../../components/common/NotificationsDropdown';
-import { getAdminProfile } from '../../api/adminApi';
+import { getAdminProfile, getSystemSettings } from '../../api/adminApi';
 
 ChartJS.register(
     CategoryScale,
@@ -45,6 +45,7 @@ const AdminDashboard = () => {
     const [recentJobs, setRecentJobs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [adminProfile, setAdminProfile] = useState(null);
+    const [settings, setSettings] = useState(null);
 
     const [isAddJobOpen, setIsAddJobOpen] = useState(false);
     const [isAddCompanyOpen, setIsAddCompanyOpen] = useState(false);
@@ -52,13 +53,15 @@ const AdminDashboard = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const [res, profile] = await Promise.all([
+                const [res, profile, settingsData] = await Promise.all([
                     axios.get('/admin/dashboard-stats'),
-                    getAdminProfile() // Fetch profile
+                    getAdminProfile(), // Fetch profile
+                    getSystemSettings()
                 ]);
                 const { stats, placementByDept, offersTrend, recentJobs } = res.data;
 
                 setAdminProfile(profile);
+                setSettings(settingsData);
                 setStats(stats);
 
                 setPlacementData({
@@ -207,8 +210,8 @@ const AdminDashboard = () => {
 
             {/* Welcome Section */}
             <div>
-                <h2 className="text-3xl font-bold text-foreground tracking-tight">Welcome back, Admin.</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-1">Here is the placement overview for the 2024 season.</p>
+                <h2 className="text-3xl font-bold text-foreground tracking-tight">Welcome back, {adminProfile?.name || 'Admin'}.</h2>
+                <p className="text-gray-500 dark:text-gray-400 mt-1">Here is the placement overview for the {settings?.academicYear || 'current'} season.</p>
             </div>
 
             {/* Stats Cards */}
