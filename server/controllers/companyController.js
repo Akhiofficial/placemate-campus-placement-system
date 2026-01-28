@@ -501,7 +501,9 @@ exports.getCompanyApplications = async (req, res) => {
                             },
                             'job': {
                                 _id: '$jobDetails._id',
-                                title: '$jobDetails.title'
+                                title: '$jobDetails.title',
+                                requirements: '$jobDetails.requirements',
+                                description: '$jobDetails.description'
                             },
                             'degree': '$profileDetails.major', // e.g. B.Tech (stored in major)
                             'branch': '$profileDetails.department', // e.g. CS
@@ -518,8 +520,43 @@ exports.getCompanyApplications = async (req, res) => {
         const data = result[0].data;
         const total = result[0].metadata[0] ? result[0].metadata[0].total : 0;
 
+        // --- ENRICH WITH AI MATCHING SCORE ---
+        // We calculate this on the fly to ensure latest algorithm usage
+        const { matchJobToCandidates } = require('../utils/atsMatcher');
+
+        // Use Promise.all to handle async matching
+        const enrichedData = await Promise.all(data.map(async (app) => {
+            // Construct Job Object for Matcher
+            const jobObj = {
+                job_id: app.job._id,
+                title: app.job.title,
+                required_skills: app.job.requirements,
+                description: app.job.description
+            };
+
+            // Construct Candidate Object
+            const candidateObj = {
+                candidate_id: app.student._id,
+                skills: app.skills,
+                degree: app.degree,
+                cgpa: app.cgpa
+            };
+
+            // Run Matcher (Job <-> Single Candidate)
+            // matchJobToCandidates expects an array of candidates, returns array of results
+            const matchResults = await matchJobToCandidates(jobObj, [candidateObj]);
+            const matchResult = matchResults[0];
+
+            return {
+                ...app,
+                aiScore: matchResult ? matchResult.match_score : 0,
+                matchReason: matchResult ? matchResult.reason : "Analysis failed",
+                missingSkills: matchResult ? matchResult.missing_skills || [] : []
+            };
+        }));
+
         res.json({
-            applications: data,
+            applications: enrichedData,
             total,
             page: parseInt(page),
             pages: Math.ceil(total / limit)
@@ -651,9 +688,33 @@ exports.getApplicantDetails = async (req, res) => {
         // Fetch Student Profile
         const profile = await StudentProfile.findOne({ user: application.student._id });
 
+        // Run AI Analysis
+        const { analyzeProfile } = require('../utils/atsMatcher');
+        let aiAnalysis = null;
+        if (profile) {
+            const jobData = application.job;
+            // Need to ensure we passed requirements in populate or fetch it
+            // populate('job', 'title...') might generally not include requirements/desc if they are large, 
+            // but for full analysis we need them.
+            // Let's re-fetch job if needed, or rely on populate if it includes it.
+            // Earlier populate: .populate('job', 'title company companyLogo location type salary')
+            // It MISSES requirements and description! We must fetch them.
+
+            const fullJob = await Job.findById(application.job._id); // Fetch full job for analysis
+
+            const candidateData = {
+                skills: profile.skills,
+                degree: profile.major || profile.degree,
+                cgpa: profile.cgpa
+            };
+
+            aiAnalysis = analyzeProfile(fullJob, candidateData, profile);
+        }
+
         res.json({
             application,
-            profile: profile || {}
+            profile: profile || {},
+            aiAnalysis
         });
     } catch (err) {
         console.error(err.message);

@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Application = require('../models/Application');
 const Job = require('../models/Job');
 const Notification = require('../models/Notification');
@@ -41,7 +42,6 @@ exports.applyForJob = async (req, res) => {
             applicationId: generateApplicationId()
         });
 
-        await application.save();
         await application.save();
 
         // Create Notification for the Company
@@ -192,5 +192,3 @@ exports.getApplicationStats = async (req, res) => {
         res.status(500).send('Server error');
     }
 };
-
-const mongoose = require('mongoose');

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, MapPin, Linkedin, Link as LinkIcon, Download, Calendar, Building, CheckCircle, XCircle, Clock, Briefcase } from 'lucide-react';
 import { getApplicantDetails, updateApplicationStatus, scheduleInterview } from '../../api/companyApi';
 
+
 const ApplicantProfile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -42,7 +43,7 @@ const ApplicantProfile = () => {
     if (loading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div></div>;
     if (!data) return <div className="text-center mt-20">Applicant not found</div>;
 
-    const { application, profile } = data;
+    const { application, profile, aiAnalysis } = data;
     const { student, job } = application;
 
     return (
@@ -122,6 +123,8 @@ const ApplicantProfile = () => {
                     </div>
                 </div>
             </div>
+
+
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 

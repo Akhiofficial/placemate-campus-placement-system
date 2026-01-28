@@ -3,7 +3,7 @@ import { Eye, MoreHorizontal, Download, Sparkles, ChevronLeft, ChevronRight } fr
 
 import { useNavigate } from 'react-router-dom';
 
-const ApplicationsTable = ({ candidates, onStatusUpdate }) => {
+const ApplicationsTable = ({ candidates, onStatusUpdate, currentPage, totalPages, onPageChange }) => {
     const navigate = useNavigate();
     const [selected, setSelected] = useState([]);
     const [activeMenuId, setActiveMenuId] = useState(null);
@@ -119,7 +119,12 @@ const ApplicationsTable = ({ candidates, onStatusUpdate }) => {
                                                 style={{ width: `${candidate.aiMatch}%` }}
                                             ></div>
                                         </div>
-                                        {matchLabel && (
+                                        {candidate.matchReason && (
+                                            <div className="text-[10px] mt-1.5 font-medium leading-tight text-slate-500 dark:text-slate-400">
+                                                {candidate.matchReason}
+                                            </div>
+                                        )}
+                                        {!candidate.matchReason && matchLabel && (
                                             <div className={`text-[10px] mt-1 font-bold flex items-center gap-1 ${matchLabel.color}`}>
                                                 {matchLabel.icon && <span className="w-1.5 h-1.5 rounded-full bg-purple-500 inline-block"></span>}
                                                 {matchLabel.warning && <span className="text-orange-500">⚠</span>}
@@ -164,16 +169,28 @@ const ApplicationsTable = ({ candidates, onStatusUpdate }) => {
 
             {/* Pagination */}
             <div className="p-4 border-t border-border bg-gray-50/30 dark:bg-card flex flex-col md:flex-row justify-between items-center gap-4">
-                <span className="text-sm text-foreground-muted">Showing {candidates.length} results</span>
+                <span className="text-sm text-foreground-muted">
+                    Page {currentPage} of {totalPages}
+                </span>
                 <div className="flex items-center gap-1">
-                    <button className="p-1 px-3 border border-border bg-white dark:bg-card rounded hover:bg-gray-50 dark:hover:bg-background-muted text-foreground-muted disabled:opacity-50">
+                    <button
+                        onClick={() => onPageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="p-1 px-3 border border-border bg-white dark:bg-card rounded hover:bg-gray-50 dark:hover:bg-background-muted text-foreground-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         <ChevronLeft size={16} />
                     </button>
-                    <button className="px-3 py-1 border border-blue-500 bg-blue-600 text-white rounded text-sm font-medium">1</button>
-                    <button className="px-3 py-1 border border-border bg-white dark:bg-card text-foreground hover:bg-gray-50 dark:hover:bg-background-muted rounded text-sm font-medium">2</button>
-                    <button className="px-3 py-1 border border-border bg-white dark:bg-card text-foreground hover:bg-gray-50 dark:hover:bg-background-muted rounded text-sm font-medium">3</button>
-                    <span className="px-2 text-foreground-muted">...</span>
-                    <button className="p-1 px-3 border border-border bg-white dark:bg-card rounded hover:bg-gray-50 dark:hover:bg-background-muted text-foreground-muted">
+
+                    {/* Simple Pagination: Show current, maybe simple range in future */}
+                    <button className="px-3 py-1 border border-blue-500 bg-blue-600 text-white rounded text-sm font-medium">
+                        {currentPage}
+                    </button>
+
+                    <button
+                        onClick={() => onPageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="p-1 px-3 border border-border bg-white dark:bg-card rounded hover:bg-gray-50 dark:hover:bg-background-muted text-foreground-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                         <ChevronRight size={16} />
                     </button>
                 </div>

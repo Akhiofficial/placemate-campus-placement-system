@@ -16,6 +16,9 @@ const CompanyApplicants = () => {
     const [roleFilter, setRoleFilter] = useState('All');
     const [cgpaFilter, setCgpaFilter] = useState('All');
     const [statusFilter, setStatusFilter] = useState('All');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const itemsPerPage = 10;
 
     // Debounce search query
     const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
@@ -39,6 +42,8 @@ const CompanyApplicants = () => {
                 if (roleFilter !== 'All') filters.role = roleFilter;
                 if (cgpaFilter !== 'All') filters.cgpa = cgpaFilter;
                 if (statusFilter !== 'All') filters.status = statusFilter;
+                filters.page = currentPage;
+                filters.limit = itemsPerPage;
 
                 const [statsData, appsData] = await Promise.all([
                     getApplicationsStats(),
@@ -58,10 +63,13 @@ const CompanyApplicants = () => {
                     cgpaValue: app.cgpa || 0,
                     skills: app.skills || [],
                     aiMatch: app.aiScore || 0,
+                    matchReason: app.matchReason,
+                    missingSkills: app.missingSkills || [],
                     status: app.status
                 }));
 
                 setCandidates(formattedCandidates);
+                setTotalPages(appsData.pages || 1);
             } catch (error) {
                 console.error("Error fetching applications:", error);
             } finally {
@@ -70,7 +78,13 @@ const CompanyApplicants = () => {
         };
 
         fetchData();
-    }, [debouncedSearch, roleFilter, cgpaFilter, statusFilter]);
+    }, [debouncedSearch, roleFilter, cgpaFilter, statusFilter, currentPage]);
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {
@@ -158,7 +172,14 @@ const CompanyApplicants = () => {
                     <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                 </div>
             ) : (
-                <ApplicationsTable candidates={candidates} onStatusUpdate={handleStatusUpdate} />
+                <ApplicationsTable
+                    candidates={candidates}
+                    onStatusUpdate={handleStatusUpdate}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                    totalItems={candidates.length} // Note: This should ideally be total items from backend, but `candidates` is just current page
+                />
             )}
         </div>
     );
