@@ -25,6 +25,8 @@ import ScheduleInterview from './pages/company/ScheduleInterview'
 import CompanyProfile from './pages/company/CompanyProfile'
 import CompanySettings from './pages/company/CompanySettings'
 import { ThemeProvider } from './context/ThemeContext'
+import AIChatAssistant from './components/common/AIChatAssistant'
+
 
 import AdminLayout from './components/layout/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
@@ -85,8 +87,9 @@ const App = () => {
             <Route path="/admin/settings" element={<AdminSettings />} />
           </Route>
         </Routes>
+        <AIChatAssistant />
       </BrowserRouter>
-    </ThemeProvider>
+    </ThemeProvider >
   )
 }
 

@@ -1,5 +1,9 @@
 // server/app.js
 require('dotenv').config();
+console.log("---------------------------------------------------");
+console.log("SERVER STARTUP ENV CHECK");
+console.log("OPENROUTER_API_KEY:", process.env.OPENROUTER_API_KEY ? "LOADED (Starts with " + process.env.OPENROUTER_API_KEY.substring(0, 5) + "...)" : "MISSING or UNDEFINED");
+console.log("---------------------------------------------------");
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -53,6 +57,7 @@ app.use('/api/applications', applicationRoutes); // Applications
 app.use('/api/interviews', interviewRoutes); // Interviews
 app.use('/api/notifications', notificationRoutes); // Notifications
 app.use('/api/company', require('./routes/company')); // Company Dashboard
+app.use('/api/ai', require('./routes/ai')); // AI Career Assistant
 
 // Socket.io for WebRTC Signaling
 io.on('connection', (socket) => {

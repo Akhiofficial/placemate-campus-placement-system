@@ -81,6 +81,10 @@ const StudentProfileSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    resumeText: { // Store extracted text for AI context
+        type: String,
+        select: false // huge text, only select when needed
+    },
     skills: {
         type: [String],
         default: []
