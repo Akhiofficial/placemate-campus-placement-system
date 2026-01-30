@@ -9,7 +9,8 @@ const SocialLogin = ({ role = 'student' }) => {
             return;
         }
         setError('');
-        window.location.href = `http://localhost:5000/api/auth/google?role=${role}`;
+        const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+        window.location.href = `${apiUrl}/auth/google?role=${role}`;
     };
 
     return (

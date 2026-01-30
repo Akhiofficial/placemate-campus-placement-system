@@ -31,11 +31,11 @@ router.get('/google', (req, res, next) => {
 });
 
 router.get('/google/callback',
-    passport.authenticate('google', { failureRedirect: 'http://localhost:5173/login?error=GoogleAuthFailed' }),
+    passport.authenticate('google', { failureRedirect: `${process.env.CLIENT_URL || 'http://localhost:5173'}/login?error=GoogleAuthFailed` }),
     (req, res) => {
         const payload = { userId: req.user.id, role: req.user.role };
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
-        res.redirect(`http://localhost:5173/auth/success?token=${token}`);
+        res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/auth/success?token=${token}`);
     }
 );
 
