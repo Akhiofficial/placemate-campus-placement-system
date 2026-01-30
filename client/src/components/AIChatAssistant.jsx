@@ -81,7 +81,7 @@ const AIChatAssistant = () => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setIsOpen(true)}
-                className={`fixed bottom-6 right-6 z-40 p-4 rounded-full shadow-2xl text-white transition-all duration-300 ${isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center`}
+                className={`fixed bottom-6 right-6 z-40 p-4 rounded-full shadow-2xl text-white transition-all duration-300 ${isOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'} bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 flex items-center justify-center`}
             >
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse border-2 border-white"></div>
                 <MessageCircle size={28} />
@@ -98,7 +98,7 @@ const AIChatAssistant = () => {
                         className="fixed bottom-6 right-6 z-50 w-[450px] max-h-[700px] h-[85vh] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl flex flex-col border border-gray-200 dark:border-gray-700 overflow-hidden font-sans ring-1 ring-black/5"
                     >
                         {/* Header */}
-                        <div className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-center shadow-md shrink-0">
+                        <div className="p-4 bg-linear-to-r from-blue-600 to-indigo-600 text-white flex justify-between items-center shadow-md shrink-0">
                             <div className="flex items-center gap-2">
                                 <div className="p-1.5 bg-white/20 rounded-lg">
                                     <Sparkles size={18} className="text-yellow-300" />
@@ -152,7 +152,7 @@ const AIChatAssistant = () => {
                                     key={idx}
                                     className={`flex items-start gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
                                 >
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${msg.role === 'assistant' ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}>
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm ${msg.role === 'assistant' ? 'bg-linear-to-br from-blue-500 to-indigo-600 text-white' : 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}>
                                         {msg.role === 'assistant' ? <Bot size={18} /> : <User size={18} />}
                                     </div>
                                     <div
@@ -183,7 +183,7 @@ const AIChatAssistant = () => {
                             ))}
                             {loading && (
                                 <div className="flex items-start gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shrink-0">
+                                    <div className="w-8 h-8 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shrink-0">
                                         <Bot size={18} />
                                     </div>
                                     <div className="px-4 py-3 bg-white dark:bg-gray-800 rounded-2xl rounded-bl-none shadow-sm border border-gray-200 dark:border-gray-700">
