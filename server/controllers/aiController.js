@@ -18,40 +18,75 @@ const buildGlobalContext = async (req) => {
         const userId = req.user?.id;
         if (!userId) return null;
 
-        const [user, profile, applications, jobs] = await Promise.all([
-            User.findById(userId).select('name email role'),
-            StudentProfile.findOne({ user: userId }).select('+resumeText'), // Explicitly select resumeText
-            Application.find({ student: userId }).populate('job', 'title company status').sort('-createdAt').limit(5),
-            // FETCH ALL RELEVANT JOBS (Limit increased to 50 for better matching)
-            Job.find({ status: 'Open' }).select('title company skills location description salary').sort('-createdAt').limit(50)
-        ]);
+        // 1. Fetch User Base Info
+        const user = await User.findById(userId).select('name email role');
+        const role = user?.role || 'student';
 
-        return {
+        // 2. Initialize Context Layout
+        let contextData = {
             user,
-            profile,
-            applications,
-            jobs
+            profile: null,
+            applications: [],
+            jobs: [],
+            candidates: [],
+            stats: {}
         };
+
+        // 3. Fetch Common Data (Jobs are useful for everyone)
+        contextData.jobs = await Job.find({ status: 'Open' })
+            .select('title company skills location description salary')
+            .sort('-createdAt')
+            .limit(50);
+
+        // 4. Role-Specific Data Fetching
+        if (role === 'student') {
+            const [profile, applications] = await Promise.all([
+                StudentProfile.findOne({ user: userId }).select('+resumeText'),
+                Application.find({ student: userId }).populate('job', 'title company status').sort('-createdAt').limit(10)
+            ]);
+            contextData.profile = profile;
+            contextData.applications = applications;
+        }
+        else if (role === 'company') {
+            // Fetch potential candidates for recruiters
+            // We populate user to get the name
+            contextData.candidates = await StudentProfile.find()
+                .select('skills education experience cgpa')
+                .populate('user', 'name')
+                .limit(20);
+        }
+        else if (role === 'admin' || role === 'superadmin') {
+            // Fetch System Stats
+            const [userCount, jobCount, appCount] = await Promise.all([
+                User.countDocuments(),
+                Job.countDocuments(),
+                Application.countDocuments()
+            ]);
+            contextData.stats = { userCount, jobCount, appCount, systemStatus: 'Healthy' };
+        }
+
+        return contextData;
+
     } catch (error) {
         console.error("Error building AI context:", error);
         return null;
     }
 };
 
-// Construct common system context
-const getSystemContext = (globalContext) => {
+// --- ROLE-BASED SYSTEM PROMPTS (STRICT DATA MODE) ---
+
+// 1. STUDENT PROMPT
+const getStudentSystemContext = (globalContext) => {
     let context = 'You are a professional AI Career Coach for engineering students.\n';
-    context += 'Use the student\'s real-time profile data from the database.\n';
-    context += 'Always give practical, realistic career advice.\n';
-    context += 'Your goal is to help the student get placed.\n';
-    context += 'Respond like a real placement consultant.\n';
+    context += 'Rules meant for YOU (AI):\n';
+    context += '1. Use ONLY the provided database data. Do NOT invent jobs or profile details.\n';
+    context += '2. If data is missing (e.g., no resume), explicitly ask the user to provide it.\n';
+    context += '3. Always give practical, realistic career advice based on the actual open jobs.\n';
 
     if (globalContext) {
         const { user, profile, applications, jobs } = globalContext;
 
-        if (user) {
-            context += `\nUSER DETAILS:\nName: ${user.name}\nRole: ${user.role}\n`;
-        }
+        if (user) context += `\nUSER: ${user.name} (${user.role})\n`;
 
         if (profile) {
             context += `\nSTUDENT PROFILE:\n`;
@@ -59,43 +94,123 @@ const getSystemContext = (globalContext) => {
             if (profile.education) context += `Education: ${JSON.stringify(profile.education)}\n`;
             if (profile.cgpa) context += `CGPA: ${profile.cgpa}\n`;
 
-            // Resume Context & Flag
-            // Check if ANY content exists (even fallback text)
             const resumeAvailable = profile.resumeText && profile.resumeText.length > 10;
-
             if (resumeAvailable) {
-                context += `\n=== RESUME STATUS: UPLOADED AND AVAILABLE ===\n`;
-                context += `(The student has uploaded their resume. DO NOT ASK THEM TO UPLOAD IT AGAIN.)\n`;
-                context += `RESUME CONTENT:\n${profile.resumeText.substring(0, 8000)}\n=== END RESUME CONTENT ===\n`;
+                context += `\nRESUME TEXT START:\n${profile.resumeText.substring(0, 5000)}\nRESUME TEXT END\n`;
             } else {
-                context += `\n(No resume uploaded yet. You may ask the student to upload their resume for better analysis.)\n`;
+                context += `\n(No resume uploaded yet.)\n`;
             }
-
-            if (profile.experience && Array.isArray(profile.experience)) context += `Experience: ${JSON.stringify(profile.experience)}\n`;
-            if (profile.projects && Array.isArray(profile.projects)) context += `Projects: ${JSON.stringify(profile.projects)}\n`;
         } else {
-            context += `\nPROFILE STATUS: Incomplete. Ask the student to complete their profile for better advice.\n`;
+            context += `\n(Student Profile not created yet.)\n`;
         }
 
-        if (Array.isArray(applications) && applications.length > 0) {
-            context += `\nRECENT APPLICATIONS:\n`;
-            applications.forEach(app => {
-                if (app.job) {
-                    context += `- ${app.job.title} at ${app.job.company} (${app.status})\n`;
-                }
-            });
+        if (applications && applications.length > 0) {
+            context += `\nYOUR APPLICATIONS:\n${JSON.stringify(applications.map(a => ({ job: a.job?.title, company: a.job?.company, status: a.status })))}\n`;
         }
 
-        if (Array.isArray(jobs) && jobs.length > 0) {
-            context += `\nAVAILABLE JOBS DATABASE (${jobs.length} jobs loaded):\n`;
-            // Pass minimal details to save tokens but allow matching
-            jobs.forEach(job => {
-                context += `- ID: ${job._id} | Role: ${job.title} | Co: ${job.company} | Loc: ${job.location} | Skills: ${safeJoin(job.skills)}\n`;
+        if (jobs && jobs.length > 0) {
+            context += `\nOPEN JOBS DATABASE:\n${jobs.map(j => `- ${j.title} @ ${j.company} [${safeJoin(j.skills)}]`).join('\n')}\n`;
+        } else {
+            context += `\n(No open jobs found in database.)\n`;
+        }
+    }
+    return context;
+};
+
+// 2. COMPANY PROMPT
+const getCompanySystemContext = (globalContext) => {
+    let context = 'You are an AI Hiring Assistant used on the Company Page.\n';
+    context += 'You behave like a recruitment dashboard feature.\n\n';
+
+    context += 'Scope:\n- Candidate Analysis\n- Resume Screening\n- Hiring Pipeline\n- Job Descriptions\n\n';
+
+    context += 'STRICT DATA RULES:\n';
+    context += '1. Use ONLY the "CANDIDATE LIST" provided below. Do NOT generate fake candidates.\n';
+    context += '2. If no candidates match a query, say "No matching candidates found in system."\n';
+    context += '3. Do NOT ask clarifying questions. Filter the provided list directly.\n';
+    context += '4. Present outputs as structured tables or lists.\n';
+
+    context += 'Restrictions:\n- NO student advice.\n- NO admin questions.\n';
+
+    if (globalContext) {
+        const { candidates, jobs } = globalContext;
+
+        if (candidates && candidates.length > 0) {
+            context += `\n=== CANDIDATE LIST (REAL DB DATA) ===\n`;
+            // formatting for token efficiency
+            candidates.forEach(c => {
+                context += `- Name: ${c.user?.name || 'Unknown'} | Skills: ${safeJoin(c.skills)} | CGPA: ${c.cgpa} | Exp: ${JSON.stringify(c.experience)}\n`;
             });
+            context += `=== END CANDIDATE LIST ===\n`;
+        } else {
+            context += `\n(System Warning: No candidates found in database to display.)\n`;
+        }
+
+        if (jobs && jobs.length > 0) {
+            context += `\nYOUR POSTED JOBS (Reference):\n${jobs.map(j => j.title).join(', ')}\n`;
         }
     }
 
     return context;
+};
+
+// 3. ADMIN PROMPT
+const getAdminSystemContext = (globalContext) => {
+    let context = 'You are an AI Platform Administrator Assistant.\n';
+    context += 'You behave like an admin dashboard feature.\n\n';
+
+    context += 'STRICT DATA RULES:\n';
+    context += '1. Use ONLY the "SYSTEM STATS" provided below.\n';
+    context += '2. Do NOT invent metrics or numbers.\n';
+    context += '3. If asked for unavailable data, say "Data points not tracked by system."\n';
+    context += '4. Output format: Dashboard Summaries/Tables.\n';
+
+    context += 'Restrictions:\n- NO student/recruiter advice.\n- NO SQL/Code generation.\n';
+
+    if (globalContext) {
+        const { stats } = globalContext;
+        if (stats) {
+            context += `\n=== SYSTEM STATS (LIVE) ===\n`;
+            context += `Total Users: ${stats.userCount}\n`;
+            context += `Total Jobs: ${stats.jobCount}\n`;
+            context += `Total Applications: ${stats.appCount}\n`;
+            context += `System Status: ${stats.systemStatus}\n`;
+            context += `=== END STATS ===\n`;
+        } else {
+            context += `\n(System stats unavailable.)\n`;
+        }
+    }
+    return context;
+};
+
+// 4. SUPERADMIN PROMPT
+const getSuperAdminSystemContext = (globalContext) => {
+    let context = 'You are a Super Administrator Assistant.\n';
+    context += 'Goal: Global governance and risk analysis.\n';
+    context += 'STRICT RULE: Base all risk assessments on the provided SYSTEM STATS. Do not hallucinate incidents.\n';
+
+    if (globalContext) {
+        const { stats } = globalContext;
+        if (stats) {
+            context += `\nGLOBAL SYSTEM DATA:\n${JSON.stringify(stats)}\n`;
+        }
+    }
+    return context;
+};
+
+// Main Dispatcher
+const getSystemContextForRole = (role, globalContext) => {
+    switch (role?.toLowerCase()) {
+        case 'company':
+            return getCompanySystemContext(globalContext);
+        case 'admin':
+            return getAdminSystemContext(globalContext);
+        case 'superadmin':
+            return getSuperAdminSystemContext(globalContext);
+        case 'student':
+        default:
+            return getStudentSystemContext(globalContext);
+    }
 };
 
 // Helper to handle OpenRouter API calls
@@ -153,11 +268,15 @@ const callOpenRouter = async (messages, res) => {
 
 exports.chat = async (req, res) => {
     try {
-        const { message } = req.body;
+        const { message, role } = req.body; // Getting role from frontend
         if (!message) return res.status(400).json({ error: 'Message is required' });
 
         const globalContext = await buildGlobalContext(req);
-        const systemPrompt = getSystemContext(globalContext);
+
+        // Use user's role from DB if available, otherwise trust frontend role or default to student
+        const userRole = req.user?.role || role || 'student';
+
+        const systemPrompt = getSystemContextForRole(userRole, globalContext);
 
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -173,11 +292,12 @@ exports.chat = async (req, res) => {
 
 exports.resumeAnalyze = async (req, res) => {
     try {
+        // Force role to student for resume analysis
+        req.user.role = 'student';
         const globalContext = await buildGlobalContext(req);
 
-        let systemPrompt = getSystemContext(globalContext);
+        let systemPrompt = getStudentSystemContext(globalContext);
         systemPrompt += `\nTASK: Perform a detailed Resume Analysis based on the DB profile and UPLOADED RESUME CONTENT.\n`;
-        systemPrompt += `If the resume content is partial or a system note, assume the user has valid capabilities and infer from their profile skills/projects.\n`;
         systemPrompt += `Identify Strengths (what stands out in skills/projects), Weaknesses (what's missing compared to open jobs), and Recommended Actions.\n`;
         systemPrompt += `Output format: Markdown.`;
 
@@ -195,15 +315,13 @@ exports.resumeAnalyze = async (req, res) => {
 
 exports.jobMatch = async (req, res) => {
     try {
+        req.user.role = 'student';
         const globalContext = await buildGlobalContext(req);
 
-        let systemPrompt = getSystemContext(globalContext);
-        systemPrompt += `\nTASK: Match the student's profile (including RESUME CONTENT) against the AVAILABLE JOBS DATABASE provided above.\n`;
-        systemPrompt += `CRITICAL INSTRUCTION: You MUST suggest at least 5-10 suitable jobs from the database list.\n`;
-        systemPrompt += `If exact matches are low, suggest related roles or jobs that are a slightly stretch but relevant.\n`;
-        systemPrompt += `Do NOT restrict your answer to only 2-3 jobs. Use the full list provided.\n`;
-        systemPrompt += `Output format: Markdown list with Match Score (%), Job Title, Company, and a short 1-sentence explanation of why it fits.\n`;
-        systemPrompt += `Also suggest 1-2 upskilling recommendations if they help qualify for better roles.`;
+        let systemPrompt = getStudentSystemContext(globalContext);
+        systemPrompt += `\nTASK: Match the student's profile against the AVAILABLE JOBS DATABASE provided above.\n`;
+        systemPrompt += `Use ONLY the jobs listed in the database.\n`;
+        systemPrompt += `Output format: Markdown list with Match Score (%), Job Title, Company, and Explanation.\n`;
 
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -219,12 +337,12 @@ exports.jobMatch = async (req, res) => {
 
 exports.careerRoadmap = async (req, res) => {
     try {
+        req.user.role = 'student';
         const globalContext = await buildGlobalContext(req);
 
-        let systemPrompt = getSystemContext(globalContext);
-        systemPrompt += `\nTASK: Create a 6-month Career Roadmap based on the student's current year, skills, and RESUME CONTENT.\n`;
+        let systemPrompt = getStudentSystemContext(globalContext);
+        systemPrompt += `\nTASK: Create a 6-month Career Roadmap based on the student's skills and open jobs.\n`;
         systemPrompt += `Focus on filling skill gaps for the Open Campus Jobs listed in the database.\n`;
-        systemPrompt += `Output format: Markdown timeline.`;
 
         const messages = [
             { role: 'system', content: systemPrompt },
@@ -239,11 +357,11 @@ exports.careerRoadmap = async (req, res) => {
 };
 
 exports.uploadDocument = async (req, res) => {
-    // 1. Initial Validation (Always 200)
+    // 1. Initial Validation
     if (!req.file) {
         return res.json({
             success: false,
-            message: "No file received. Please select a document to upload.",
+            message: "No file received.",
             extractedLength: 0,
             fallbackUsed: false
         });
@@ -255,9 +373,8 @@ exports.uploadDocument = async (req, res) => {
     let fallbackReason = "";
 
     try {
-        console.log(`[AI Upload] Processing: ${req.file.originalname} (${req.file.mimetype}) | Size: ${req.file.size} bytes`);
+        console.log(`[AI Upload] Processing: ${req.file.originalname}`);
 
-        // 2. Validate File Type (Manually to strictly control response)
         const validMimes = [
             'application/pdf',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -272,18 +389,15 @@ exports.uploadDocument = async (req, res) => {
             throw new Error("Unsupported format. Please upload PDF or DOCX.");
         }
 
-        // 3. Lazy Load Parsers
         let pdfParse, mammoth;
         try {
             if (isPdf) pdfParse = require('pdf-parse');
             if (isDocx) mammoth = require('mammoth');
         } catch (depError) {
             console.warn("[AI Upload] Dependency missing:", depError.message);
-            // Don't crash, just trigger fallback
             throw new Error("Parser dependencies unavailable.");
         }
 
-        // 4. Safe Parsing
         const buffer = fs.readFileSync(req.file.path);
 
         if (isPdf) {
@@ -294,27 +408,18 @@ exports.uploadDocument = async (req, res) => {
             extractedText = result.value;
         }
 
-        // Clean text
         extractedText = extractedText.replace(/\s+/g, ' ').trim();
 
-        // 5. Validation of Extracted Content
         if (!extractedText || extractedText.length < 50) {
             throw new Error("Extracted text is too short or empty.");
         }
 
-        console.log(`[AI Upload] Success. Extracted ${extractedText.length} chars.`);
-
     } catch (error) {
-        console.warn(`[AI Upload] Parsing failed/incomplete: ${error.message}. Switching to FALLBACK mode.`);
-        console.error("[AI Upload] FULL ERROR STACK:", error.stack); // Added for debugging
+        console.warn(`[AI Upload] Parsing failed: ${error.message}`);
         fallbackUsed = true;
         fallbackReason = error.message;
-
-        // 6. Generate Contextual Fallback
-        // mimic a summary so AI knows a file exists
-        extractedText = `[SYSTEM NOTE: The user uploaded a file named "${req.file.originalname}". The system could not fully extract text from it (Reason: ${error.message}). However, treat this as valid context that the user HAS provided a document. If asked, tell the user you are aware of the file "${req.file.originalname}" but might need them to copy-paste key details if specific questions come up.]`;
+        extractedText = `[SYSTEM NOTE: File "${req.file.originalname}" uploaded but extraction failed (${error.message}). Treated as valid document context.]`;
     } finally {
-        // 7. Cleanup (Crucial)
         try {
             if (req.file && req.file.path && fs.existsSync(req.file.path)) {
                 fs.unlinkSync(req.file.path);
@@ -324,8 +429,7 @@ exports.uploadDocument = async (req, res) => {
         }
     }
 
-    // 8. Role-Aware Storage
-    // Only store for students as per requirements
+    // Role-Aware Storage
     try {
         if (req.user && req.user.role === 'student' && !fallbackUsed) {
             await StudentProfile.findOneAndUpdate(
@@ -336,20 +440,18 @@ exports.uploadDocument = async (req, res) => {
         }
     } catch (dbError) {
         console.error("[AI Upload] DB Save Error:", dbError);
-        // Do not fail the request if DB save fails, just note it
     }
 
-    // 9. Final Response (ALWAYS 200, JSON)
-    let userMessage = "Document processed successfully! I've analyzed it.";
+    let userMessage = "Document processed successfully!";
     if (fallbackUsed) {
-        userMessage = "I couldn't fully read the document details, but I can still analyze it based on what I see.";
+        userMessage = "I couldn't fully read the document details, but I can still analyze it.";
     }
 
     return res.json({
-        success: true, // Always true unless big system failure, but here we handled errors
+        success: true,
         message: userMessage,
         extractedLength: extractedText.length,
         fallbackUsed: fallbackUsed,
-        debugError: fallbackReason // For dev visibility if needed
+        debugError: fallbackReason
     });
 };
