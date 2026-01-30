@@ -279,7 +279,7 @@ const AIChatAssistant = () => {
                         className="fixed bottom-6 right-6 z-50 w-[90vw] md:w-[450px] max-h-[700px] h-[80vh] bg-card/80 backdrop-blur-2xl rounded-3xl shadow-2xl flex flex-col border border-border/50 overflow-hidden ring-1 ring-black/5"
                     >
                         {/* Header - Glassmorphism & Gradient */}
-                        <div className="p-4 bg-gradient-to-r from-background/80 to-background/40 backdrop-blur-md border-b border-white/5 flex justify-between items-center shrink-0">
+                        <div className="p-4 bg-linear-to-r from-background/80 to-background/40 backdrop-blur-md border-b border-white/5 flex justify-between items-center shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="p-2.5 bg-primary/10 rounded-2xl ring-1 ring-primary/5">
                                     <Sparkles size={18} className="text-primary" strokeWidth={2.5} />
@@ -360,7 +360,7 @@ const AIChatAssistant = () => {
                                         transition={{ duration: 0.3 }}
                                         className={`flex items-end gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
                                     >
-                                        <div className={`w-8 h-8 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-black/5 ${msg.role === 'assistant' ? 'bg-gradient-to-br from-primary to-primary-hover text-foreground-inverted' : 'bg-background-muted text-foreground-muted'}`}>
+                                        <div className={`w-8 h-8 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-black/5 ${msg.role === 'assistant' ? 'bg-linear-to-br from-primary to-primary-hover text-foreground-inverted' : 'bg-background-muted text-foreground-muted'}`}>
                                             {msg.role === 'assistant' ? <Bot size={16} strokeWidth={2.5} /> : <User size={16} strokeWidth={2.5} />}
                                         </div>
                                         <div
