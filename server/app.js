@@ -28,6 +28,7 @@ const io = new Server(server, {
 });
 
 app.use(cors());
+app.set('trust proxy', 1); // Trust first proxy (Render)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use('/uploads', express.static('uploads'));
