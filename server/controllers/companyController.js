@@ -1181,10 +1181,10 @@ exports.updateCompanyProfile = async (req, res) => {
         // Handle File Uploads
         if (req.files) {
             if (req.files.logo) {
-                profileFields.logo = '/' + req.files.logo[0].path.replace(/\\/g, '/');
+                profileFields.logo = req.files.logo[0].path; // Cloudinary URL
             }
             if (req.files.coverImage) {
-                profileFields.coverImage = '/' + req.files.coverImage[0].path.replace(/\\/g, '/');
+                profileFields.coverImage = req.files.coverImage[0].path; // Cloudinary URL
             }
         }
 

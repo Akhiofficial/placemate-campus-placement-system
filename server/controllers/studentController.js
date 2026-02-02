@@ -203,7 +203,7 @@ exports.uploadResume = async (req, res) => {
         }
 
         // Construct URL
-        const resumeUrl = `${req.protocol}://${req.get('host')}/uploads/resumes/${req.file.filename}`;
+        const resumeUrl = req.file.path; // Cloudinary URL
 
         // Find and update profile
         let profile = await StudentProfile.findOne({ user: req.user.userId });
@@ -243,7 +243,7 @@ exports.uploadStudentImage = async (req, res) => {
         }
 
         // Construct URL
-        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
+        const imageUrl = req.file.path; // Cloudinary URL
 
         // Find and update profile
         let profile = await StudentProfile.findOne({ user: req.user.userId });

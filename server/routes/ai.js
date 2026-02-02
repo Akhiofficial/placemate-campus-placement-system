@@ -6,8 +6,14 @@ const multer = require('multer');
 const path = require('path');
 
 // Configure Multer for temp storage
+const fs = require('fs');
+const tempDir = 'uploads/temp/';
+if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+}
+
 const upload = multer({
-    dest: 'uploads/temp/', // Temporary execution folder
+    dest: tempDir, // Temporary execution folder
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     // Allow all files here, validate in controller to ensure we return JSON 200
     fileFilter: (req, file, cb) => {

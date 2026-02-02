@@ -1598,7 +1598,7 @@ exports.uploadAdminAvatar = async (req, res) => {
             return res.status(400).json({ msg: 'No file uploaded' });
         }
 
-        const imageUrl = `${req.protocol}://${req.get('host')}/uploads/images/${req.file.filename}`;
+        const imageUrl = req.file.path; // Cloudinary URL
 
         // Update user profile directly
         const user = await User.findById(req.user.userId);
