@@ -13,7 +13,7 @@ const LoginForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [rememberMe, setRememberMe] = useState(false); // Added state
     const [formData, setFormData] = useState({
-        email: '',
+        email: '',  
         password: ''
     });
     const [loading, setLoading] = useState(false);

@@ -394,7 +394,7 @@ const AdminJobs = () => {
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 dark:border-gray-700 p-1 flex items-center justify-center">
                                                         <img
-                                                            src={job.logo && job.logo.startsWith('http') ? job.logo : `http://localhost:5000${job.logo}`}
+                                                            src={job.logo && job.logo.startsWith('http') ? job.logo : `${import.meta.env.VITE_API_URL}${job.logo}`}
                                                             alt={job.company}
                                                             className="w-full h-full object-contain"
                                                             onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerText = job.company?.charAt(0).toUpperCase() || 'C'; }}

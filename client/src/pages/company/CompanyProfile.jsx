@@ -179,7 +179,13 @@ const CompanyProfile = () => {
 
                     <div className="h-64 rounded-xl overflow-hidden relative group">
                         <img
-                            src={profileData.coverImage ? (profileData.coverImage.startsWith('blob:') ? profileData.coverImage : `http://localhost:5000${profileData.coverImage}`) : "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000"}
+                            src={
+                                profileData.coverImage
+                                    ? (profileData.coverImage.startsWith('blob:') || profileData.coverImage.startsWith('http')
+                                        ? profileData.coverImage
+                                        : `${import.meta.env.VITE_API_URL}${profileData.coverImage}`)
+                                    : "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000"
+                            }
                             alt="Cover"
                             className="w-full h-full object-cover"
                         />
@@ -201,7 +207,11 @@ const CompanyProfile = () => {
                         {/* Logo or Placeholder */}
                         {profileData.logo ? (
                             <img
-                                src={profileData.logo.startsWith('blob:') ? profileData.logo : `http://localhost:5000${profileData.logo}`}
+                                src={
+                                    profileData.logo.startsWith('blob:') || profileData.logo.startsWith('http')
+                                        ? profileData.logo
+                                        : `${import.meta.env.VITE_API_URL}${profileData.logo}`
+                                }
                                 alt="Logo"
                                 className="w-full h-full object-contain rounded-lg"
                             />

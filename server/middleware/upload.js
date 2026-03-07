@@ -7,10 +7,9 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'resumes',
-        resource_type: 'raw', // Important for non-image files like PDF/DOCX
+        resource_type: 'auto', // 'auto' ensures PDFs can be served correctly without 401 Strict Delivery errors
         format: async (req, file) => {
-            // Optional: enforce format or keep original
-            // For raw files, format is often ignored or keeps original extension
+            // Since it's auto/image, keeping original extension is supported (or it will auto-assign pdf/docx)
             return path.extname(file.originalname).substring(1);
         },
         public_id: (req, file) => file.fieldname + '-' + Date.now()

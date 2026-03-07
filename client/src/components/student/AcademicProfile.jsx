@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FileText, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import api from "../../api/axios";
+import { getFileUrl } from "../../utils/fileHelper";
 
 const AcademicProfile = ({ profile: initialProfile }) => {
   const [resumeUrl, setResumeUrl] = useState(initialProfile?.resumeUrl);
@@ -106,7 +107,7 @@ const AcademicProfile = ({ profile: initialProfile }) => {
           {/* View Link if exists */}
           {(resumeUrl || initialProfile?.resumeUrl) && (
             <a
-              href={resumeUrl || initialProfile?.resumeUrl}
+              href={getFileUrl(resumeUrl || initialProfile?.resumeUrl)}
               target="_blank"
               rel="noopener noreferrer"
               className="absolute top-2 right-2 p-1 text-foreground-muted hover:text-blue-600 z-20"

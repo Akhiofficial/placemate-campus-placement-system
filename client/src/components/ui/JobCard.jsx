@@ -18,7 +18,7 @@ const JobCard = ({ job, index }) => {
             >
                 {job.companyLogo ? (
                     <img
-                        src={job.companyLogo.startsWith('http') ? job.companyLogo : `http://localhost:5000${job.companyLogo}`}
+                        src={job.companyLogo.startsWith('http') ? job.companyLogo : `${import.meta.env.VITE_API_URL}${job.companyLogo}`}
                         alt={job.company}
                         className="w-full h-full object-cover"
                         onError={(e) => { e.target.style.display = 'none'; e.target.parentElement.innerText = job.company?.charAt(0).toUpperCase() || 'C'; }}

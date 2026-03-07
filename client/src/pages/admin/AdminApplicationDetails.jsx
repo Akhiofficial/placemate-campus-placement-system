@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, MapPin, Linkedin, Link as LinkIcon, Download, Calendar, Building, CheckCircle, XCircle, Clock, Briefcase, User, GraduationCap } from 'lucide-react';
 import { getApplicationDetails, updateApplicationStatus } from '../../api/adminApi';
 
+import { getFileUrl } from '../../utils/fileHelper';
+
 const AdminApplicationDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -104,7 +106,7 @@ const AdminApplicationDetails = () => {
                 <div className="p-8 flex flex-col md:flex-row gap-8 items-start">
                     <div className="w-32 h-32 rounded-2xl bg-accent overflow-hidden border-2 border-border shrink-0">
                         <img
-                            src={profile?.profilePictureUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(student?.name || 'Student')}&background=random`}
+                            src={profile?.profilePictureUrl ? getFileUrl(profile.profilePictureUrl) : `https://ui-avatars.com/api/?name=${encodeURIComponent(student?.name || 'Student')}&background=random`}
                             alt={student?.name}
                             className="w-full h-full object-cover"
                         />
@@ -299,7 +301,7 @@ const AdminApplicationDetails = () => {
                                 <Clock size={20} className="text-gray-500" /> Resume Preview
                             </h3>
                             {profile?.resumeUrl && (
-                                <a href={profile.resumeUrl} download className="flex items-center gap-2 px-3 py-1.5 bg-accent text-foreground rounded-lg text-sm font-medium hover:bg-accent/80 transition-colors">
+                                <a href={getFileUrl(profile.resumeUrl)} download className="flex items-center gap-2 px-3 py-1.5 bg-accent text-foreground rounded-lg text-sm font-medium hover:bg-accent/80 transition-colors">
                                     <Download size={16} /> Download PDF
                                 </a>
                             )}
@@ -308,7 +310,7 @@ const AdminApplicationDetails = () => {
                         <div className="bg-muted/30 rounded-xl min-h-[500px] flex items-center justify-center border border-dashed border-border overflow-hidden">
                             {profile?.resumeUrl ? (
                                 <iframe
-                                    src={profile.resumeUrl.startsWith('http') ? profile.resumeUrl : `http://localhost:5000${profile.resumeUrl}`}
+                                    src={getFileUrl(profile.resumeUrl)}
                                     className="w-full h-[500px]"
                                     title="Resume Preview"
                                 >

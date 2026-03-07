@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Mail, MapPin, Phone, Github, Linkedin, Download, FileText, Edit, Globe, Loader2, Upload, Camera, Briefcase } from "lucide-react";
 import api from "../../api/axios";
 import EditProfileModal from "../../components/student/EditProfileModal";
+import { getFileUrl } from "../../utils/fileHelper";
 
 const StudentProfile = () => {
     const [profile, setProfile] = useState(null);
@@ -147,7 +148,7 @@ const StudentProfile = () => {
                     <div className="h-48 relative bg-gray-100 group">
                         {/* Banner Image or Gradient */}
                         {profile?.coverImageUrl ? (
-                            <img src={profile.coverImageUrl} alt="Cover" className="w-full h-full object-cover" />
+                            <img src={getFileUrl(profile.coverImageUrl)} alt="Cover" className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full bg-linear-to-r from-blue-600 to-indigo-600"></div>
                         )}
@@ -166,7 +167,7 @@ const StudentProfile = () => {
                         <div className="absolute -top-24 left-1/2 -translate-x-1/2 md:relative md:left-0 md:translate-x-0 md:-top-16">
                             <div className="relative group w-32 h-32 rounded-full border-4 border-card bg-white shadow-md overflow-hidden">
                                 {profile?.profilePictureUrl ? (
-                                    <img src={profile.profilePictureUrl} alt="Profile" className="w-full h-full object-cover" />
+                                    <img src={getFileUrl(profile.profilePictureUrl)} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full bg-blue-100 flex items-center justify-center text-4xl text-blue-600 font-bold">
                                         {displayName.charAt(0).toUpperCase()}
@@ -355,7 +356,7 @@ const StudentProfile = () => {
                                             <>
                                                 <p className="font-medium text-foreground">Resume Uploaded</p>
                                                 <div className="flex items-center justify-center gap-3 pt-1">
-                                                    <a href={profile.resumeUrl} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-foreground-muted hover:text-blue-600 transition underline underline-offset-2 relative z-20">
+                                                    <a href={getFileUrl(profile.resumeUrl)} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-foreground-muted hover:text-blue-600 transition underline underline-offset-2 relative z-20">
                                                         View
                                                     </a>
                                                     <span className="text-border">|</span>

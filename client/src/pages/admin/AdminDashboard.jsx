@@ -108,7 +108,7 @@ const AdminDashboard = () => {
                         logo: job.companyLogo
                             ? (job.companyLogo.startsWith('http') || job.companyLogo.startsWith('data:')
                                 ? job.companyLogo
-                                : `http://localhost:5000/${job.companyLogo.startsWith('/') ? job.companyLogo.slice(1) : job.companyLogo}`)
+                                : `${import.meta.env.VITE_API_URL}${job.companyLogo.startsWith('/') ? job.companyLogo : '/' + job.companyLogo}`)
                             : `https://api.dicebear.com/7.x/identicon/svg?seed=${job.company}`
                     };
                 });

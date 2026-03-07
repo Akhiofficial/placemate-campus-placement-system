@@ -88,7 +88,11 @@ const CompanyProfileView = () => {
                     {/* Cover Image */}
                     <div className="h-64 md:h-80 w-full rounded-2xl overflow-hidden relative shadow-md group">
                         <img
-                            src={profile.coverImage ? `http://localhost:5000${profile.coverImage}` : "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000"}
+                            src={
+                                profile.coverImage
+                                    ? (profile.coverImage.startsWith('http') ? profile.coverImage : `${import.meta.env.VITE_API_URL}${profile.coverImage}`)
+                                    : "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2000"
+                            }
                             alt="Cover"
                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                         />
@@ -105,7 +109,7 @@ const CompanyProfileView = () => {
                                     <div className="w-full h-full bg-white rounded-xl overflow-hidden border border-gray-100 dark:border-gray-800 flex items-center justify-center">
                                         {profile.logo ? (
                                             <img
-                                                src={`http://localhost:5000${profile.logo}`}
+                                                src={profile.logo.startsWith('http') ? profile.logo : `${import.meta.env.VITE_API_URL}${profile.logo}`}
                                                 alt="Logo"
                                                 className="w-full h-full object-contain p-2"
                                             />

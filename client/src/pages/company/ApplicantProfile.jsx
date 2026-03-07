@@ -251,7 +251,11 @@ const ApplicantProfile = () => {
                         <div className="bg-gray-50 dark:bg-gray-900 rounded-xl min-h-[500px] flex items-center justify-center border border-dashed border-gray-200 overflow-hidden">
                             {profile.resumeUrl ? (
                                 <iframe
-                                    src={profile.resumeUrl.startsWith('http') ? profile.resumeUrl : `http://localhost:5000${profile.resumeUrl}`}
+                                    src={
+                                        profile.resumeUrl.startsWith('http')
+                                            ? profile.resumeUrl
+                                            : `${import.meta.env.VITE_API_URL}${profile.resumeUrl}`
+                                    }
                                     className="w-full h-[500px]"
                                     title="Resume Preview"
                                 >
