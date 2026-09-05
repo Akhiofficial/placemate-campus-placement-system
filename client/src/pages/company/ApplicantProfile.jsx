@@ -5,6 +5,8 @@ import { ArrowLeft, Mail, Phone, MapPin, Linkedin, Link as LinkIcon, Download, C
 import { getApplicantDetails, updateApplicationStatus, scheduleInterview } from '../../api/companyApi';
 
 
+import { getFileUrl } from '../../utils/fileHelper';
+
 const ApplicantProfile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -242,7 +244,7 @@ const ApplicantProfile = () => {
                                 <Clock size={20} className="text-gray-600" /> Resume Preview
                             </h3>
                             {profile.resumeUrl && (
-                                <a href={profile.resumeUrl} download className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
+                                <a href={getFileUrl(profile.resumeUrl)} target="_blank" rel="noopener noreferrer" download className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
                                     <Download size={16} /> Download PDF
                                 </a>
                             )}
@@ -251,11 +253,7 @@ const ApplicantProfile = () => {
                         <div className="bg-gray-50 dark:bg-gray-900 rounded-xl min-h-[500px] flex items-center justify-center border border-dashed border-gray-200 overflow-hidden">
                             {profile.resumeUrl ? (
                                 <iframe
-                                    src={
-                                        profile.resumeUrl.startsWith('http')
-                                            ? profile.resumeUrl
-                                            : `${import.meta.env.VITE_API_URL}${profile.resumeUrl}`
-                                    }
+                                    src={getFileUrl(profile.resumeUrl)}
                                     className="w-full h-[500px]"
                                     title="Resume Preview"
                                 >

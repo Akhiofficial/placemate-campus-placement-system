@@ -5,14 +5,13 @@ const path = require('path'); // Still needed for extension check? Cloudinary ha
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: {
-        folder: 'resumes',
-        resource_type: 'auto', // 'auto' ensures PDFs can be served correctly without 401 Strict Delivery errors
-        format: async (req, file) => {
-            // Since it's auto/image, keeping original extension is supported (or it will auto-assign pdf/docx)
-            return path.extname(file.originalname).substring(1);
-        },
-        public_id: (req, file) => file.fieldname + '-' + Date.now()
+    params: async (req, file) => {
+        const ext = path.extname(file.originalname).substring(1).toLowerCase() || 'pdf';
+        return {
+            folder: 'resumes',
+            resource_type: 'raw',
+            public_id: `${file.fieldname}-${Date.now()}.${ext}`
+        };
     },
 });
 

@@ -1,6 +1,11 @@
 export const getFileUrl = (url) => {
     if (!url) return '';
 
+    // Fix for Cloudinary PDF delivery: convert image/upload to raw/upload for PDFs so browser PDF viewer loads correctly
+    if (typeof url === 'string' && url.includes('res.cloudinary.com') && url.includes('/image/upload/') && url.toLowerCase().includes('.pdf')) {
+        url = url.replace('/image/upload/', '/raw/upload/');
+    }
+
     // If it's a localhost URL but we are deployed (not on localhost), rewrite it.
     if (typeof window !== 'undefined' && url.includes('localhost') && window.location.hostname !== 'localhost') {
         const apiUrl = import.meta.env.VITE_API_URL || '/api';
