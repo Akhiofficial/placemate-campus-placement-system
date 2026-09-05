@@ -98,57 +98,71 @@ const getSystemContext = (globalContext) => {
     return context;
 };
 
-// Helper to handle OpenRouter API calls
+// Helper to handle OpenRouter API calls with automatic multi-model failover
 const callOpenRouter = async (messages, res) => {
-    try {
-        const apiKey = process.env.OPENROUTER_API_KEY?.trim();
+    const apiKey = process.env.OPENROUTER_API_KEY?.trim();
 
-        console.log("---------------------------------------------------");
-        console.log("AI REQUEST STARTED");
-        console.log("Key available:", !!apiKey);
-        console.log("Messages payload sample:", JSON.stringify(messages).substring(0, 200) + "...");
+    console.log("---------------------------------------------------");
+    console.log("AI REQUEST STARTED");
+    console.log("Key available:", !!apiKey);
 
-        if (!apiKey) {
-            console.error('OPENROUTER_API_KEY is missing');
-            return res.json({ reply: "I'm currently in demo mode. Please configure the API key to unlock my full potential as your AI Career Coach!" });
-        }
-
-        const response = await axios.post(
-            'https://openrouter.ai/api/v1/chat/completions',
-            {
-                model: 'google/gemini-2.0-flash-001',
-                messages: messages,
-                max_tokens: 1500, // Increased for longer job lists
-                temperature: 0.7,
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${apiKey}`,
-                    'Content-Type': 'application/json'
-                    // removed optional headers to minimize failure surface
-                },
-            }
-        );
-
-        console.log("AI RESPONSE RECEIVED status:", response.status);
-        const reply = response.data.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
-        res.json({ reply });
-
-    } catch (error) {
-        console.error("---------------------------------------------------");
-        console.error('AI SERVICE FULL ERROR:', error.message);
-        if (error.response) {
-            console.error('STATUS:', error.response.status);
-            console.error('DATA:', JSON.stringify(error.response.data));
-        } else {
-            console.error('STACK:', error.stack);
-        }
-        console.error("---------------------------------------------------");
-
-        // Return actual error context to frontend for debugging
-        const errorMessage = error.response?.data?.error?.message || error.message || "Unknown error";
-        res.json({ reply: `(System Error): The AI couldn't connect. Error: ${errorMessage}` });
+    if (!apiKey) {
+        console.error('OPENROUTER_API_KEY is missing');
+        return res.json({ reply: "(System Error): Please configure a valid API key in server/.env." });
     }
+
+    const CANDIDATE_MODELS = [
+        'google/gemma-4-31b-it:free',
+        'minimax/minimax-m3:free',
+        'cohere/north-mini-code:free',
+        'inclusionai/ling-3.0-flash-sante:free',
+        'dots-studio/dots-3-note-preview:free'
+    ];
+
+    let lastError = null;
+
+    for (const model of CANDIDATE_MODELS) {
+        try {
+            console.log(`Attempting OpenRouter request with model: ${model}`);
+            const response = await axios.post(
+                'https://openrouter.ai/api/v1/chat/completions',
+                {
+                    model: model,
+                    messages: messages,
+                    max_tokens: 1500,
+                    temperature: 0.7,
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 10000
+                }
+            );
+
+            console.log(`AI RESPONSE RECEIVED (${model}) status:`, response.status);
+            const reply = response.data.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
+            return res.json({ reply });
+
+        } catch (error) {
+            lastError = error;
+            const status = error.response?.status;
+            const msg = error.response?.data?.error?.message || error.message;
+            console.warn(`[AI Failover] Model ${model} failed (${status}): ${msg}. Trying next model...`);
+        }
+    }
+
+    console.error("---------------------------------------------------");
+    console.error('ALL AI MODELS EXHAUSTED OR FAILED:', lastError?.message);
+    if (lastError?.response) {
+        console.error('STATUS:', lastError.response.status);
+        console.error('DATA:', JSON.stringify(lastError.response.data));
+    }
+    console.error("---------------------------------------------------");
+
+    const errorMessage = lastError?.response?.data?.error?.message || lastError?.message || "Rate limited or service unavailable";
+    res.json({ reply: `(AI Rate Limit / Offline): Unable to reach LLM providers upstream (${errorMessage}). Please try again in a few moments!` });
 };
 
 exports.chat = async (req, res) => {

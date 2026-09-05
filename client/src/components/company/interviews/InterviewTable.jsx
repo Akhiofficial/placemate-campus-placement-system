@@ -145,7 +145,7 @@ const InterviewTable = ({ interviews = [], loading, onRefresh }) => {
                                         <div className="flex items-center justify-end gap-2 relative">
                                             {interview.meetingLink && ['Scheduled', 'Confirmed', 'Rescheduled'].includes(interview.status) && (
                                                 <a
-                                                    href={interview.meetingLink}
+                                                    href={interview.meetingLink.startsWith('http') || interview.meetingLink.startsWith('/') ? interview.meetingLink : `/interview/${interview.meetingLink}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors shadow-sm"

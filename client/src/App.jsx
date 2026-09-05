@@ -39,6 +39,8 @@ import SuperAdminRequests from './pages/admin/SuperAdminRequests' // Import
 
 import AdminSettings from './pages/admin/AdminSettings'
 
+import InterviewRoom from './pages/InterviewRoom'
+
 const App = () => {
   return (
     <ThemeProvider>
@@ -48,6 +50,7 @@ const App = () => {
           <Route path="/signup" element={<Signup />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
           <Route path="/auth/success" element={<AuthSuccess />} />
+          <Route path="/interview/:roomId" element={<InterviewRoom />} />
 
           <Route element={<StudentLayout />}>
             <Route path="/student/dashboard" element={<StudentDashboard />} />
