@@ -230,7 +230,9 @@ exports.uploadResume = async (req, res) => {
         }
 
         // Construct URL
-        const resumeUrl = req.file.path; // Cloudinary URL
+        const resumeUrl = req.file.path.startsWith('http')
+            ? req.file.path
+            : `/uploads/resumes/${req.file.filename}`;
 
         // Find and update profile
         let profile = await StudentProfile.findOne({ user: req.user.userId });

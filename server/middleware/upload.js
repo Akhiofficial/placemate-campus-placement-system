@@ -3,16 +3,21 @@ const cloudinary = require('../config/cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path'); // Still needed for extension check? Cloudinary handles formats but we want strict check.
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: async (req, file) => {
-        const ext = path.extname(file.originalname).substring(1).toLowerCase() || 'pdf';
-        return {
-            folder: 'resumes',
-            resource_type: 'raw',
-            public_id: `${file.fieldname}-${Date.now()}.${ext}`
-        };
+const fs = require('fs');
+
+const uploadDir = path.join(__dirname, '../uploads/resumes');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
     },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname).toLowerCase() || '.pdf';
+        cb(null, `${file.fieldname}-${Date.now()}${ext}`);
+    }
 });
 
 // Check file type (Client side validation is better, but server side is safe)
