@@ -64,8 +64,8 @@ const JobListings = () => {
                         className="flex flex-col md:flex-row gap-4 justify-between items-end md:items-center"
                     >
                         <div>
-                            <h1 className="text-2xl font-bold text-foreground">Find Your Dream Job</h1>
-                            <p className="text-foreground-muted mt-1">Browse and apply to the best opportunities for you.</p>
+                            <h1 className="text-2xl font-bold text-foreground">Explore Jobs Designed for Your Role</h1>
+                            <p className="text-foreground-muted mt-1">Search by title, company, skills, or work style to find roles that match your academic profile.</p>
                         </div>
 
                         <div className="flex gap-2 w-full md:w-auto">

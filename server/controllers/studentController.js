@@ -27,13 +27,40 @@ exports.getDashboard = async (req, res) => {
 
         // 3. Get profile completion status (basic check)
         const profile = await StudentProfile.findOne({ user: studentId });
-        const profileComplete = !!(profile && profile.cgpa && profile.resumeUrl);
+        const profileComplete = !!(
+            profile &&
+            profile.cgpa &&
+            profile.resumeUrl &&
+            Array.isArray(profile.skills) &&
+            profile.skills.length > 0 &&
+            profile.bio
+        );
 
-        // 4. Get Recommended Jobs (For now just getting 4 latest open jobs)
-        // In future, we can filter by skills matching
-        const recommendedJobs = await Job.find({ status: 'Open' })
+        // 4. Get Recommended Jobs with profile-based matching
+        const recommendedQuery = { status: 'Open' };
+        if (profile) {
+            const matchers = [];
+            if (Array.isArray(profile.skills) && profile.skills.length > 0) {
+                matchers.push({ tags: { $in: profile.skills } });
+                matchers.push({ requirements: { $in: profile.skills } });
+            }
+            if (profile.department) {
+                matchers.push({ department: profile.department });
+            }
+            if (matchers.length > 0) {
+                recommendedQuery.$or = matchers;
+            }
+        }
+
+        let recommendedJobs = await Job.find(recommendedQuery)
             .sort({ createdAt: -1 })
             .limit(4);
+
+        if (recommendedJobs.length === 0) {
+            recommendedJobs = await Job.find({ status: 'Open' })
+                .sort({ createdAt: -1 })
+                .limit(4);
+        }
 
         res.json({
             user,
