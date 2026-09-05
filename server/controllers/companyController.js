@@ -912,14 +912,10 @@ exports.scheduleInterview = async (req, res) => {
 
         // Backward compatibility / Fallback logic
         if (!finalMeetingLink && !finalLocation) {
-            if (platform === 'WebRTC') {
-                // Generate internal room ID
-                finalMeetingLink = crypto.randomBytes(16).toString('hex');
-            } else if (!platform || platform === 'Google Meet') {
-                // Placeholder for external if not provided
-                // If user didn't provide a link but selected Google Meet, we can't auto-generate a valid one easily without API
-                // So we leave it empty or use a placeholder if purely testing
-                // finalMeetingLink = `https://meet.google.com/${crypto.randomBytes(4).toString('hex')}`; // Do not auto-generate fake external links
+            if (platform === 'WebRTC' || !platform) {
+                // Generate internal WebRTC room route
+                const roomId = crypto.randomBytes(12).toString('hex');
+                finalMeetingLink = `/interview/${roomId}`;
             }
         }
 

@@ -307,10 +307,15 @@ const MyInterviews = () => {
                                                 (() => {
                                                     const isCompletedOrCancelled = interview.status === 'Completed' || interview.status === 'Cancelled';
                                                     const canJoin = !isCompletedOrCancelled && interview.meetingLink;
+                                                    const joinUrl = canJoin ? (
+                                                        interview.meetingLink.startsWith('http') || interview.meetingLink.startsWith('/')
+                                                            ? interview.meetingLink
+                                                            : `/interview/${interview.meetingLink}`
+                                                    ) : undefined;
 
                                                     return (
                                                         <a
-                                                            href={canJoin ? interview.meetingLink : undefined}
+                                                            href={joinUrl}
                                                             target={canJoin ? "_blank" : undefined}
                                                             rel={canJoin ? "noopener noreferrer" : undefined}
                                                             className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-medium transition shadow-sm text-sm ${canJoin

@@ -85,6 +85,11 @@ io.on('connection', (socket) => {
     socket.on('ice-candidate', (data) => {
         socket.to(data.roomId).emit('ice-candidate', data);
     });
+
+    // In-room chat relay
+    socket.on('send-message', (data) => {
+        socket.to(data.roomId).emit('receive-message', data);
+    });
 });
 
 
